@@ -1,16 +1,16 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
-// TODO: User needs to provide the full config from Firebase Console
+// Triveni Asset Manager Firebase Configuration
 const firebaseConfig = {
-    apiKey: "REPLACE_WITH_YOUR_API_KEY", // Missing
-    authDomain: "triveniassetmanager.firebaseapp.com", // Inferred
-    databaseURL: "https://triveniassetmanager-default-rtdb.firebaseio.com/", // Provided
-    projectId: "triveniassetmanager", // Inferred
-    storageBucket: "triveniassetmanager.appspot.com", // Inferred
-    messagingSenderId: "REPLACE_WITH_SENDER_ID", // Missing
-    appId: "REPLACE_WITH_APP_ID" // Missing
+    apiKey: "AIzaSyDQtoV0hz4e8q8--4DeV0k_HmBKJZKvNPU",
+    authDomain: "triveniassetmanager.firebaseapp.com",
+    databaseURL: "https://triveniassetmanager-default-rtdb.firebaseio.com",
+    projectId: "triveniassetmanager",
+    storageBucket: "triveniassetmanager.firebasestorage.app",
+    messagingSenderId: "216534389154",
+    appId: "1:216534389154:web:ec388ac05c2b12432762fb",
+    measurementId: "G-1ZQT0B10V7"
 };
 
 // Initialize Firebase
