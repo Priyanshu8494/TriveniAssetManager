@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 
 function App() {
@@ -8,42 +8,61 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [form, setForm] = useState({
+  const [editingId, setEditingId] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+
+  const initialFormState = {
     setName: '',     // e.g. TGA01
     assignee: '',    // User Name
     status: 'Free',  // Free, Assigned, Faulty
-    display: { brand: '', size: '', model: '' },
+    ids: {           // Explicit IDs (Editable)
+      cpu: '', dis1: '', dis2: '',
+      mouse: '', key: '', head: '', cam: ''
+    },
+    display1: { brand: '', size: '', model: '' },
+    display2: { brand: '', size: '', model: '' },
     peripherals: { mouse: '', keyboard: '', headphone: '', camera: '' }
-  });
+  };
+
+  const [form, setForm] = useState(initialFormState);
 
   useEffect(() => {
     localStorage.setItem('triveniAssets', JSON.stringify(sets));
   }, [sets]);
 
-  // ID Generation Logic (TGA01 -> TGA-C-01, TGA-D-1)
+  // ID Generation Logic
   const generateIds = (baseName) => {
-    // Extract number: "TGA01" -> "1" (removes leading zeros for Display ID as per request: TGA-D-1)
-    // "TGA01" -> "01" (keeps zero for CPU ID?)
-    // Let's assume standard formatting. 
-    // Request: "TGA-C-01", "TGA-D-1" 
+    if (!baseName) return { cpu: '', dis1: '', dis2: '', mouse: '', key: '', head: '', cam: '' };
 
-    // Simple parser: remove non-digits to get number
     const numberPart = baseName.replace(/\D/g, '');
-    const prefix = baseName.replace(/[^A-Za-z]/g, '');
+    const prefix = baseName.replace(/[^A-Za-z]/g, '') || 'TGA';
+    const num = parseInt(numberPart || 0);
 
-    // Formats
-    const idCPU = `${prefix}-C-${numberPart.padStart(2, '0')}`; // TGA-C-01
-    const idDis = `${prefix}-D-${parseInt(numberPart || 0)}`;   // TGA-D-1 (No leading zero)
-    const idMou = `${prefix}-M-${parseInt(numberPart || 0)}`;   // TGA-M-1
-    const idKey = `${prefix}-KB-${parseInt(numberPart || 0)}`;  // TGA-KB-1
-    const idHead = `${prefix}-HP-${parseInt(numberPart || 0)}`; // TGA-HP-1
-    const idCam = `${prefix}-CAM-${parseInt(numberPart || 0)}`;
-
-    return { idCPU, idDis, idMou, idKey, idHead, idCam };
+    return {
+      cpu: `${prefix}-C-${numberPart.padStart(2, '0')}`,
+      dis1: `${prefix}-D1-${num}`,
+      dis2: `${prefix}-D2-${num}`,
+      mouse: `${prefix}-M-${num}`,
+      key: `${prefix}-KB-${num}`,
+      head: `${prefix}-HP-${num}`,
+      cam: `${prefix}-CAM-${num}`
+    };
   };
 
   const handleChange = (e, section = null) => {
     const { name, value } = e.target;
+
+    // Auto-Generate IDs when Main Name changes
+    if (name === 'setName') {
+      const newIds = generateIds(value);
+      setForm(prev => ({
+        ...prev,
+        setName: value,
+        ids: newIds
+      }));
+      return;
+    }
+
     if (section) {
       setForm(prev => ({ ...prev, [section]: { ...prev[section], [name]: value } }));
     } else {
@@ -51,43 +70,67 @@ function App() {
     }
   };
 
+  const handleIdChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, ids: { ...prev.ids, [name]: value } }));
+  }
+
+  const handleEdit = (set) => {
+    setEditingId(set.id);
+    setForm({
+      setName: set.setName,
+      assignee: set.assignee,
+      status: set.status,
+      ids: set.ids || generateIds(set.setName), // Fallback
+      display1: set.display1 || { brand: '', size: '', model: '' },
+      display2: set.display2 || { brand: '', size: '', model: '' },
+      peripherals: set.peripherals
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm(initialFormState);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.setName) return alert("Asset Name (e.g. TGA01) is required!");
 
-    const ids = generateIds(form.setName);
+    const timestamp = new Date().toLocaleDateString();
 
-    const newSet = {
-      id: Date.now(),
-      ...form,
-      autoIds: ids,
-      timestamp: new Date().toLocaleDateString()
-    };
-
-    setSets([newSet, ...sets]);
-    // Reset Form (keep structure)
-    setForm({
-      setName: '', assignee: '', status: 'Free',
-      display: { brand: '', size: '', model: '' },
-      peripherals: { mouse: '', keyboard: '', headphone: '', camera: '' }
-    });
+    if (editingId) {
+      setSets(sets.map(s => s.id === editingId ? { ...s, ...form, timestamp } : s));
+      setEditingId(null);
+    } else {
+      const newSet = { id: Date.now(), ...form, timestamp };
+      setSets([newSet, ...sets]);
+    }
+    setForm(initialFormState);
   };
 
   const handleExport = () => {
     const data = sets.map(s => ({
-      "Asset Set Name": s.setName,
+      "Asset Set": s.setName,
       "Status": s.status,
       "Assigned To": s.assignee || "N/A",
-      "CPU ID": s.autoIds.idCPU,
-      "Display ID": s.autoIds.idDis,
-      "Display Brand": s.display.brand,
-      "Display Size": s.display.size,
-      "Mouse ID": s.autoIds.idMou,
+      "CPU ID": s.ids.cpu,
+
+      "Monitor 1 ID": s.ids.dis1,
+      "Mon 1 Brand": s.display1?.brand,
+      "Mon 1 Model": s.display1?.model,
+      "Mon 1 Size": s.display1?.size,
+
+      "Monitor 2 ID": s.ids.dis2,
+      "Mon 2 Brand": s.display2?.brand,
+      "Mon 2 Model": s.display2?.model,
+      "Mon 2 Size": s.display2?.size,
+
+      "Mouse ID": s.ids.mouse,
       "Mouse Model": s.peripherals.mouse,
-      "Keyboard ID": s.autoIds.idKey,
+      "Keyboard ID": s.ids.key,
       "Keyboard Model": s.peripherals.keyboard,
-      "Headphone ID": s.autoIds.idHead,
-      "Headphone Model": s.peripherals.headphone,
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -102,14 +145,49 @@ function App() {
     }
   }
 
-  // Stats
-  const total = sets.length;
-  const free = sets.filter(s => s.status === 'Free').length;
-  const faulty = sets.filter(s => s.status === 'Faulty').length;
-  const assigned = sets.filter(s => s.status === 'Assigned').length;
+  // Statistics Logic
+  const stats = useMemo(() => {
+    let totalDisplays = 0;
+    let freeDisplays = 0;
+    let brandCount = {};
+    let sizeCount = {};
+
+    sets.forEach(set => {
+      // Check Monitor 1
+      if (set.display1?.brand) {
+        totalDisplays++;
+        if (set.status === 'Free') freeDisplays++;
+
+        const b = set.display1.brand.toUpperCase();
+        brandCount[b] = (brandCount[b] || 0) + 1;
+
+        const s = set.display1.size ? set.display1.size.toUpperCase() : 'UNKNOWN';
+        sizeCount[s] = (sizeCount[s] || 0) + 1;
+      }
+      // Check Monitor 2
+      if (set.display2?.brand) {
+        totalDisplays++;
+        if (set.status === 'Free') freeDisplays++;
+
+        const b = set.display2.brand.toUpperCase();
+        brandCount[b] = (brandCount[b] || 0) + 1;
+
+        const s = set.display2.size ? set.display2.size.toUpperCase() : 'UNKNOWN';
+        sizeCount[s] = (sizeCount[s] || 0) + 1;
+      }
+    });
+
+    return { totalDisplays, freeDisplays, brandCount, sizeCount };
+  }, [sets]);
+
+  // Main Stats
+  const totalSets = sets.length;
+  const freeSets = sets.filter(s => s.status === 'Free').length;
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
+
+      {/* Header */}
       <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">
@@ -117,42 +195,106 @@ function App() {
           </h1>
           <p className="text-gray-400 mt-1">IT Asset Inventory System</p>
         </div>
-        <div className="flex gap-4">
-          <div className="glass-card px-4 py-2 text-center">
-            <span className="block text-xs text-gray-400">Total</span>
-            <span className="text-xl font-bold text-white">{total}</span>
+        <div className="flex flex-wrap justify-center gap-4">
+          <div className="glass-card px-4 py-2 text-center min-w-[80px]">
+            <span className="block text-xs text-gray-400">Total Sets</span>
+            <span className="text-xl font-bold text-white">{totalSets}</span>
           </div>
-          <div className="glass-card px-4 py-2 text-center border-green-500/30">
-            <span className="block text-xs text-gray-400">Free</span>
-            <span className="text-xl font-bold text-green-400">{free}</span>
+          <div className="glass-card px-4 py-2 text-center border-green-500/30 min-w-[80px]">
+            <span className="block text-xs text-gray-400">Free Sets</span>
+            <span className="text-xl font-bold text-green-400">{freeSets}</span>
           </div>
-          <div className="glass-card px-4 py-2 text-center border-red-500/30">
-            <span className="block text-xs text-gray-400">Faulty</span>
-            <span className="text-xl font-bold text-red-400">{faulty}</span>
-          </div>
-          <button onClick={handleExport} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2">
-            📂 Export Excel
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2 border ${showStats ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-cyan-400 border-cyan-500/30'}`}
+          >
+            📊 Analysis
           </button>
         </div>
       </header>
+
+      {/* STATS DASHBOARD (Collapsible) */}
+      {showStats && (
+        <div className="glass-card p-6 mb-8 border-t-4 border-purple-500 animation-fade-in">
+          <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">📦 Detailed Inventory Analysis</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Monitor Overview */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <h4 className="text-purple-400 font-bold mb-3 uppercase text-xs tracking-wider">Monitor Overview</h4>
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-gray-400">Total Monitors</span>
+                <span className="text-2xl font-bold text-white">{stats.totalDisplays}</span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-gray-400">Free Monitors</span>
+                <span className="text-2xl font-bold text-green-400">{stats.freeDisplays}</span>
+              </div>
+              <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: `${stats.totalDisplays ? (stats.freeDisplays / stats.totalDisplays) * 100 : 0}%` }}></div>
+              </div>
+            </div>
+
+            {/* Brand Breakdown */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <h4 className="text-pink-400 font-bold mb-3 uppercase text-xs tracking-wider">By Brand (Monitors)</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                {Object.keys(stats.brandCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
+                {Object.entries(stats.brandCount).map(([brand, count]) => (
+                  <div key={brand} className="flex justify-between text-sm">
+                    <span className="text-gray-300">{brand}</span>
+                    <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Size Breakdown */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">By Size (Monitors)</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                {Object.keys(stats.sizeCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
+                {Object.entries(stats.sizeCount).map(([size, count]) => (
+                  <div key={size} className="flex justify-between text-sm">
+                    <span className="text-gray-300">{size}</span>
+                    <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* INPUT FORM */}
         <div className="lg:col-span-1">
-          <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5 sticky top-8 border-t-4 border-cyan-500">
-            <h2 className="text-xl font-semibold text-white mb-4">Add New Asset Set</h2>
+          <form onSubmit={handleSubmit} className={`glass-card p-6 space-y-5 sticky top-8 border-t-4 ${editingId ? 'border-yellow-400 shadow-yellow-500/20' : 'border-cyan-500'}`}>
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-white">{editingId ? '✏️ Edit Asset Set' : '➕ Add New Asset Set'}</h2>
+              {editingId && <button type="button" onClick={handleCancelEdit} className="text-xs text-red-400 underline">Cancel Edit</button>}
+            </div>
 
             {/* Core Info */}
-            <div className="space-y-4 bg-black/20 p-4 rounded-lg">
-              <div>
-                <label className="text-xs text-cyan-400 uppercase font-bold">Asset Set / CPU Name</label>
-                <input
-                  type="text" name="setName" placeholder="e.g. TGA01"
-                  value={form.setName} onChange={handleChange}
-                  className="glass-input text-lg font-mono tracking-wider"
-                />
-                <p className="text-[10px] text-gray-500 mt-1">IDs (TGA-C-01...) will be auto-generated.</p>
+            <div className={`space-y-4 p-4 rounded-lg ${editingId ? 'bg-yellow-500/10' : 'bg-black/20'}`}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-cyan-400 uppercase font-bold">Asset Set Name</label>
+                  <input
+                    type="text" name="setName" placeholder="e.g. TGA01"
+                    value={form.setName} onChange={handleChange}
+                    className="glass-input text-lg font-mono tracking-wider font-bold text-cyan-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase">CPU ID</label>
+                  <input
+                    type="text" name="cpu" placeholder="Auto"
+                    value={form.ids.cpu} onChange={handleIdChange}
+                    className="glass-input text-sm font-mono bg-cyan-900/20 border-cyan-500/30"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -176,57 +318,74 @@ function App() {
               </div>
             </div>
 
-            {/* Display */}
+            {/* Display 1 */}
             <div className="space-y-3">
-              <label className="text-xs text-gray-400 uppercase border-b border-white/10 w-full block pb-1">Display Details</label>
+              <div className="flex justify-between items-end border-b border-purple-500/30 pb-1">
+                <label className="text-xs text-purple-400 uppercase font-bold">Monitor 1</label>
+                <input type="text" name="dis1" value={form.ids.dis1} onChange={handleIdChange} placeholder="ID" className="bg-transparent text-right text-xs text-gray-400 font-mono focus:outline-none w-24 placeholder-gray-600" />
+              </div>
               <input
-                type="text" name="brand" placeholder="Brand (e.g. Dell)"
-                value={form.display.brand} onChange={(e) => handleChange(e, 'display')}
+                type="text" name="brand" placeholder="Brand"
+                value={form.display1.brand} onChange={(e) => handleChange(e, 'display1')}
                 className="glass-input"
               />
               <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text" name="model" placeholder="Model"
-                  value={form.display.model} onChange={(e) => handleChange(e, 'display')}
-                  className="glass-input"
-                />
-                <input
-                  type="text" name="size" placeholder="Size"
-                  value={form.display.size} onChange={(e) => handleChange(e, 'display')}
-                  className="glass-input"
-                />
+                <input type="text" name="model" placeholder="Model" value={form.display1.model} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
+                <input type="text" name="size" placeholder="Size" value={form.display1.size} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
+              </div>
+            </div>
+
+            {/* Display 2 */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-end border-b border-pink-500/30 pb-1">
+                <label className="text-xs text-pink-400 uppercase font-bold">Monitor 2</label>
+                <input type="text" name="dis2" value={form.ids.dis2} onChange={handleIdChange} placeholder="ID" className="bg-transparent text-right text-xs text-gray-400 font-mono focus:outline-none w-24 placeholder-gray-600" />
+              </div>
+              <input
+                type="text" name="brand" placeholder="Brand"
+                value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
+                className="glass-input"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" name="model" placeholder="Model" value={form.display2.model} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
+                <input type="text" name="size" placeholder="Size" value={form.display2.size} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
               </div>
             </div>
 
             {/* Accessories */}
             <div className="space-y-3">
-              <label className="text-xs text-gray-400 uppercase border-b border-white/10 w-full block pb-1">Accessories (Model/Brand)</label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text" name="mouse" placeholder="Mouse"
-                  value={form.peripherals.mouse} onChange={(e) => handleChange(e, 'peripherals')}
-                  className="glass-input"
-                />
-                <input
-                  type="text" name="keyboard" placeholder="Keyboard"
-                  value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')}
-                  className="glass-input"
-                />
-                <input
-                  type="text" name="headphone" placeholder="Headphone"
-                  value={form.peripherals.headphone} onChange={(e) => handleChange(e, 'peripherals')}
-                  className="glass-input"
-                />
-                <input
-                  type="text" name="camera" placeholder="Camera"
-                  value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')}
-                  className="glass-input"
-                />
+              <label className="text-xs text-gray-400 uppercase border-b border-white/10 w-full block pb-1">Accessories (ID & Model)</label>
+
+              <div className="grid grid-cols-6 gap-2 items-center">
+                <span className="col-span-1 text-[10px] text-gray-500">MOUSE</span>
+                <input type="text" name="mouse" value={form.ids.mouse} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                <input type="text" name="mouse" value={form.peripherals.mouse} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+              </div>
+
+              <div className="grid grid-cols-6 gap-2 items-center">
+                <span className="col-span-1 text-[10px] text-gray-500">KEYBD</span>
+                <input type="text" name="key" value={form.ids.key} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                <input type="text" name="keyboard" value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+              </div>
+
+              <div className="grid grid-cols-6 gap-2 items-center">
+                <span className="col-span-1 text-[10px] text-gray-500">AUDIO</span>
+                <input type="text" name="head" value={form.ids.head} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                <input type="text" name="headphone" value={form.peripherals.headphone} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+              </div>
+
+              <div className="grid grid-cols-6 gap-2 items-center">
+                <span className="col-span-1 text-[10px] text-gray-500">CAM</span>
+                <input type="text" name="cam" value={form.ids.cam} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                <input type="text" name="camera" value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
               </div>
             </div>
 
-            <button type="submit" className="triveni-btn w-full mt-4 py-3 text-lg">
-              Save Asset Set
+            <button type="submit" className={`triveni-btn w-full mt-4 py-3 text-lg ${editingId ? 'from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400' : ''}`}>
+              {editingId ? '💾 Update Changes' : '💾 Save Asset Set'}
+            </button>
+            <button type="button" onClick={handleExport} className="bg-green-600/20 hover:bg-green-600/40 text-green-400 w-full py-2 rounded border border-green-500/30 text-sm font-mono">
+              export to excel
             </button>
           </form>
         </div>
@@ -245,7 +404,7 @@ function App() {
           ) : (
             <div className="space-y-4">
               {sets.map((set) => (
-                <div key={set.id} className={`glass-card p-0 overflow-hidden relative group ${set.status === 'Faulty' ? 'border-red-500/50' : ''}`}>
+                <div key={set.id} className={`glass-card p-0 overflow-hidden relative group ${set.status === 'Faulty' ? 'border-red-500/50' : ''} ${editingId === set.id ? 'ring-2 ring-yellow-400' : ''}`}>
 
                   {/* Header */}
                   <div className="p-4 bg-white/5 border-b border-white/10 flex flex-col md:flex-row justify-between md:items-center gap-2">
@@ -263,19 +422,28 @@ function App() {
                           </span>
                           {set.status === 'Assigned' && <span className="text-sm text-gray-300">👤 {set.assignee}</span>}
                         </div>
-                        <p className="text-xs text-gray-500 font-mono mt-1">CPU ID: {set.autoIds.idCPU}</p>
+                        <p className="text-xs text-gray-500 font-mono mt-1">CPU ID: {set.ids.cpu}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleDelete(set.id)} className="text-red-500 text-xs hover:text-red-400 px-3 py-1 border border-red-500/30 rounded opacity-50 hover:opacity-100">Remove</button>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(set)} className="text-yellow-400 text-xs px-3 py-1 border border-yellow-500/30 rounded hover:bg-yellow-500/10 transition-all">
+                        ✏️ Edit
+                      </button>
+                      <button onClick={() => handleDelete(set.id)} className="text-red-500 text-xs hover:text-red-400 px-3 py-1 border border-red-500/30 rounded opacity-50 hover:opacity-100 transition-all">
+                        Delete
+                      </button>
+                    </div>
                   </div>
 
                   {/* IDs Grid */}
                   <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <IDBlock label="Display" id={set.autoIds.idDis} val={`${set.display.brand} ${set.display.size}`} />
-                    <IDBlock label="Mouse" id={set.autoIds.idMou} val={set.peripherals.mouse} />
-                    <IDBlock label="Keyboard" id={set.autoIds.idKey} val={set.peripherals.keyboard} />
-                    <IDBlock label="Headphone" id={set.autoIds.idHead} val={set.peripherals.headphone} />
-                    <IDBlock label="Camera" id={set.autoIds.idCam} val={set.peripherals.camera} />
+                    <IDBlock label="Mon 1" id={set.ids.dis1} val={`${set.display1?.brand || ''} ${set.display1?.size || ''}`} color="text-purple-400" />
+                    <IDBlock label="Mon 2" id={set.ids.dis2} val={`${set.display2?.brand || ''} ${set.display2?.size || ''}`} color="text-pink-400" />
+
+                    <IDBlock label="Mouse" id={set.ids.mouse} val={set.peripherals.mouse} />
+                    <IDBlock label="Keyboard" id={set.ids.key} val={set.peripherals.keyboard} />
+                    <IDBlock label="Headphone" id={set.ids.head} val={set.peripherals.headphone} />
+                    <IDBlock label="Camera" id={set.ids.cam} val={set.peripherals.camera} />
                   </div>
                 </div>
               ))}
@@ -288,11 +456,11 @@ function App() {
   );
 }
 
-const IDBlock = ({ label, id, val }) => (
+const IDBlock = ({ label, id, val, color = "text-cyan-600/70" }) => (
   <div className="bg-black/20 rounded p-2 border border-white/5">
     <div className="text-[10px] text-gray-500 uppercase flex justify-between">
       <span>{label}</span>
-      <span className="text-cyan-600/70">{id}</span>
+      <span className={color}>{id}</span>
     </div>
     <div className="font-medium text-gray-300 truncate h-5">
       {val || "-"}
