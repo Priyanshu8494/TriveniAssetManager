@@ -349,13 +349,21 @@ function App() {
             </div>
 
             {/* Display 1 */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-end border-b border-purple-500/30 pb-1">
-                <label className="text-xs text-purple-400 uppercase font-bold">Monitor 1</label>
-                <input type="text" name="dis1" value={form.ids.dis1} onChange={handleIdChange} placeholder="ID" className="bg-transparent text-right text-xs text-gray-400 font-mono focus:outline-none w-24 placeholder-gray-600" />
+            <div className="space-y-3 p-3 rounded bg-purple-500/5 border border-purple-500/20">
+              <label className="text-xs text-purple-400 uppercase font-bold block">Monitor 1</label>
+
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                <input
+                  type="text" name="dis1"
+                  value={form.ids.dis1} onChange={handleIdChange}
+                  placeholder="Monitor 1 ID"
+                  className="glass-input font-mono text-sm bg-purple-500/10 border-purple-500/30 text-purple-300"
+                />
               </div>
+
               <input
-                type="text" name="brand" placeholder="Brand"
+                type="text" name="brand" placeholder="Brand (e.g. Dell)"
                 value={form.display1.brand} onChange={(e) => handleChange(e, 'display1')}
                 className="glass-input"
               />
@@ -366,11 +374,19 @@ function App() {
             </div>
 
             {/* Display 2 */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-end border-b border-pink-500/30 pb-1">
-                <label className="text-xs text-pink-400 uppercase font-bold">Monitor 2</label>
-                <input type="text" name="dis2" value={form.ids.dis2} onChange={handleIdChange} placeholder="ID" className="bg-transparent text-right text-xs text-gray-400 font-mono focus:outline-none w-24 placeholder-gray-600" />
+            <div className="space-y-3 p-3 rounded bg-pink-500/5 border border-pink-500/20">
+              <label className="text-xs text-pink-400 uppercase font-bold block">Monitor 2</label>
+
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                <input
+                  type="text" name="dis2"
+                  value={form.ids.dis2} onChange={handleIdChange}
+                  placeholder="Monitor 2 ID"
+                  className="glass-input font-mono text-sm bg-pink-500/10 border-pink-500/30 text-pink-300"
+                />
               </div>
+
               <input
                 type="text" name="brand" placeholder="Brand"
                 value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
@@ -446,8 +462,8 @@ function App() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full border ${set.status === 'Free' ? 'border-green-500 text-green-400 bg-green-500/10' :
-                              set.status === 'Assigned' ? 'border-blue-500 text-blue-400 bg-blue-500/10' :
-                                'border-red-500 text-red-400 bg-red-500/10'
+                            set.status === 'Assigned' ? 'border-blue-500 text-blue-400 bg-blue-500/10' :
+                              'border-red-500 text-red-400 bg-red-500/10'
                             }`}>
                             {set.status}
                           </span>
