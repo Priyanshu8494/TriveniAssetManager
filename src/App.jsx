@@ -1,15 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import { db } from './firebaseConfig';
+import { ref, onValue, set, remove } from "firebase/database";
 
 function App() {
   // State
-  const [sets, setSets] = useState(() => {
-    const saved = localStorage.getItem('triveniAssets');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [sets, setSets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [editingId, setEditingId] = useState(null);
   const [showStats, setShowStats] = useState(false);
+
+  // Firebase Read Listener
+  useEffect(() => {
+    const assetsRef = ref(db, 'assets/');
+    const unsubscribe = onValue(assetsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert Object to Array
+        const loadedSets = Object.values(data);
+        // Sort by timestamp if needed, or keeping it as is. 
+        // Since we use Date.now() as ID, we can sort by ID descending to show newest first
+        loadedSets.sort((a, b) => b.id - a.id);
+        setSets(loadedSets);
+      } else {
+        setSets([]);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const initialFormState = {
     setName: '',     // e.g. TGA01
@@ -25,10 +46,6 @@ function App() {
   };
 
   const [form, setForm] = useState(initialFormState);
-
-  useEffect(() => {
-    localStorage.setItem('triveniAssets', JSON.stringify(sets));
-  }, [sets]);
 
   // ID Generation Logic
   const generateIds = (baseName) => {
@@ -100,14 +117,25 @@ function App() {
 
     const timestamp = new Date().toLocaleDateString();
 
-    if (editingId) {
-      setSets(sets.map(s => s.id === editingId ? { ...s, ...form, timestamp } : s));
-      setEditingId(null);
-    } else {
-      const newSet = { id: Date.now(), ...form, timestamp };
-      setSets([newSet, ...sets]);
-    }
-    setForm(initialFormState);
+    // Use existing ID if editing, or create new one
+    const id = editingId || Date.now();
+
+    const payload = {
+      id,
+      ...form,
+      timestamp
+    };
+
+    // Firebase Write
+    set(ref(db, 'assets/' + id), payload)
+      .then(() => {
+        // Success
+        setForm(initialFormState);
+        setEditingId(null);
+      })
+      .catch((error) => {
+        alert("Error saving data: " + error.message);
+      });
   };
 
   const handleExport = () => {
@@ -141,7 +169,8 @@ function App() {
 
   const handleDelete = (id) => {
     if (confirm("Delete this asset set?")) {
-      setSets(sets.filter(s => s.id !== id));
+      // Firebase Remove
+      remove(ref(db, 'assets/' + id));
     }
   }
 
@@ -183,6 +212,7 @@ function App() {
   // Main Stats
   const totalSets = sets.length;
   const freeSets = sets.filter(s => s.status === 'Free').length;
+  const faulty = sets.filter(s => s.status === 'Faulty').length;
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
@@ -193,7 +223,7 @@ function App() {
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">
             Triveni Asset Manager
           </h1>
-          <p className="text-gray-400 mt-1">IT Asset Inventory System</p>
+          <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
           <div className="glass-card px-4 py-2 text-center min-w-[80px]">
@@ -394,10 +424,11 @@ function App() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Inventory List</h2>
-            <span className="text-xs text-gray-500">Auto-saved to device</span>
+            <span className="text-xs text-gray-500">Live Sync (Firebase)</span>
+            <span className={`text-[10px] px-2 py-1 rounded-full ${loading ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>{loading ? 'Connecting...' : '● Online'}</span>
           </div>
 
-          {sets.length === 0 ? (
+          {sets.length === 0 && !loading ? (
             <div className="glass-card p-12 text-center text-gray-500">
               <p>No assets found.</p>
             </div>
