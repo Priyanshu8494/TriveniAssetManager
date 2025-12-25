@@ -220,8 +220,9 @@ function App() {
       {/* Header */}
       <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">
-            ASSET MANAGER - by priyanshu
+          <h1 className="text-3xl font-bold">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">ASSET MANAGER</span>
+            <span className="text-[10px] text-gray-600 ml-2 font-mono tracking-widest relative -top-1">by priyanshu</span>
           </h1>
           <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
         </div>
