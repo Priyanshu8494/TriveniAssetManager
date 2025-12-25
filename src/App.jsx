@@ -164,7 +164,7 @@ function App() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Assets");
-    XLSX.writeFile(wb, "Triveni_Assets_Report.xlsx");
+    XLSX.writeFile(wb, "Asset_Manager_Report.xlsx");
   };
 
   const handleDelete = (id) => {
@@ -221,7 +221,7 @@ function App() {
       <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">
-            Triveni Asset Manager
+            ASSET MANAGER - by priyanshu
           </h1>
           <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
         </div>
