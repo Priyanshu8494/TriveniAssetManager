@@ -211,12 +211,19 @@ function App() {
       }
     });
 
-    // CPU Stats
-    const totalCpus = sets.length;
-    const freeCpus = sets.filter(s => s.status === 'Free').length;
-    const assignedCpus = sets.filter(s => s.status === 'Assigned').length;
+    // Desktop Stats
+    const desktops = sets.filter(s => s.category !== 'Laptop');
+    const totalDesktops = desktops.length;
+    const freeDesktops = desktops.filter(s => s.status === 'Free').length;
+    const assignedDesktops = desktops.filter(s => s.status === 'Assigned').length;
 
-    return { totalDisplays, freeDisplays, brandCount, sizeCount, totalCpus, freeCpus, assignedCpus };
+    // Laptop Stats
+    const laptops = sets.filter(s => s.category === 'Laptop');
+    const totalLaptops = laptops.length;
+    const freeLaptops = laptops.filter(s => s.status === 'Free').length;
+    const assignedLaptops = laptops.filter(s => s.status === 'Assigned').length;
+
+    return { totalDisplays, freeDisplays, brandCount, sizeCount, totalDesktops, freeDesktops, assignedDesktops, totalLaptops, freeLaptops, assignedLaptops };
   }, [sets]);
 
   // Main Stats
@@ -279,26 +286,45 @@ function App() {
             <div className="glass-card p-6 mb-8 border-t-4 border-purple-500 animation-fade-in">
               <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">📦 Detailed Inventory Analysis</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-                {/* CPU Overview (NEW) */}
+                {/* Desktop Overview */}
                 <div className="bg-black/20 p-4 rounded-lg">
-                  <h4 className="text-cyan-400 font-bold mb-3 uppercase text-xs tracking-wider">CPU Overview</h4>
+                  <h4 className="text-cyan-400 font-bold mb-3 uppercase text-xs tracking-wider">Desktop Overview</h4>
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Total CPUs</span>
-                    <span className="text-2xl font-bold text-white">{stats.totalCpus}</span>
+                    <span className="text-gray-400">Total</span>
+                    <span className="text-2xl font-bold text-white">{stats.totalDesktops}</span>
                   </div>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-gray-400">Assigned</span>
-                    <span className="text-2xl font-bold text-blue-400">{stats.assignedCpus}</span>
+                    <span className="text-2xl font-bold text-blue-400">{stats.assignedDesktops}</span>
                   </div>
                   <div className="flex justify-between items-end">
                     <span className="text-gray-400">Free</span>
-                    <span className="text-2xl font-bold text-green-400">{stats.freeCpus}</span>
+                    <span className="text-2xl font-bold text-green-400">{stats.freeDesktops}</span>
                   </div>
                   <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    {/* Blue bar for assigned, Green for free (implied by remainder) */}
-                    <div className="h-full bg-blue-500" style={{ width: `${stats.totalCpus ? (stats.assignedCpus / stats.totalCpus) * 100 : 0}%` }}></div>
+                    <div className="h-full bg-blue-500" style={{ width: `${stats.totalDesktops ? (stats.assignedDesktops / stats.totalDesktops) * 100 : 0}%` }}></div>
+                  </div>
+                </div>
+
+                {/* Laptop Overview */}
+                <div className="bg-black/20 p-4 rounded-lg">
+                  <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">Laptop Overview</h4>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-gray-400">Total</span>
+                    <span className="text-2xl font-bold text-white">{stats.totalLaptops}</span>
+                  </div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-gray-400">Assigned</span>
+                    <span className="text-2xl font-bold text-blue-400">{stats.assignedLaptops}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="text-gray-400">Free</span>
+                    <span className="text-2xl font-bold text-green-400">{stats.freeLaptops}</span>
+                  </div>
+                  <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-yellow-500" style={{ width: `${stats.totalLaptops ? (stats.assignedLaptops / stats.totalLaptops) * 100 : 0}%` }}></div>
                   </div>
                 </div>
 
