@@ -35,6 +35,7 @@ function App() {
   }, []);
 
   const initialFormState = {
+    category: 'Desktop', // Desktop | Laptop
     setName: '',     // e.g. TGA01
     assignee: '',    // User Name
     status: 'Free',  // Free, Assigned, Faulty
@@ -97,6 +98,7 @@ function App() {
   const handleEdit = (set) => {
     setEditingId(set.id);
     setForm({
+      category: set.category || 'Desktop', // Backwards compatibility
       setName: set.setName,
       assignee: set.assignee,
       status: set.status,
@@ -142,6 +144,7 @@ function App() {
 
   const handleExport = () => {
     const data = sets.map(s => ({
+      "Category": s.category || "Desktop",
       "Asset Set": s.setName,
       "Status": s.status,
       "Assigned To": s.assignee || "N/A",
@@ -358,6 +361,22 @@ function App() {
 
                 {/* Core Info */}
                 <div className={`space-y-4 p-4 rounded-lg ${editingId ? 'bg-yellow-500/10' : 'bg-black/20'}`}>
+
+                  {/* Category Selection */}
+                  <div>
+                    <label className="text-xs text-cyan-400 uppercase font-bold">Category</label>
+                    <div className="flex gap-2 mt-1">
+                      <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Desktop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
+                        <input type="radio" name="category" value="Desktop" checked={form.category === 'Desktop'} onChange={handleChange} className="hidden" />
+                        Desktop
+                      </label>
+                      <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Laptop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
+                        <input type="radio" name="category" value="Laptop" checked={form.category === 'Laptop'} onChange={handleChange} className="hidden" />
+                        Laptop
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs text-cyan-400 uppercase font-bold">Asset Set Name</label>
@@ -507,7 +526,7 @@ function App() {
                       <div className="p-4 bg-white/5 border-b border-white/10 flex flex-col md:flex-row justify-between md:items-center gap-2">
                         <div className="flex items-center gap-3">
                           <div className={`p-3 rounded-lg font-bold text-xl ${set.status === 'Faulty' ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-300'}`}>
-                            {set.setName}
+                            {set.category === 'Laptop' ? '💻' : '🖥️'} {set.setName}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
