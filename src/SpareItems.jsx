@@ -13,7 +13,8 @@ function SpareItems() {
         "Printers",    // Printer, Cartridge
         "Cables",      // HDMI, VGA, Power
         "Components",  // RAM, HDD, SSD
-        "Power"        // UPS
+        "Power",       // UPS
+        "Laptops"      // Laptop
     ];
 
     const defaultItems = [
@@ -34,6 +35,7 @@ function SpareItems() {
         { category: "Components", name: "SSD 256GB" },
         { category: "Components", name: "SSD 512GB" },
         { category: "Power", name: "UPS" },
+        { category: "Laptops", name: "Laptop" },
     ];
 
     useEffect(() => {

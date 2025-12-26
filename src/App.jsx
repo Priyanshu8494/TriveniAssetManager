@@ -246,12 +246,6 @@ function App() {
           >
             🔌 Spares
           </button>
-          <button
-            onClick={() => setCurrentView('cpu')}
-            className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'cpu' ? 'bg-blue-600 text-white border-blue-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
-          >
-            🖥️ CPU
-          </button>
 
           <div className="glass-card px-4 py-2 text-center min-w-[80px]">
             <span className="block text-xs text-gray-400">Total Sets</span>
@@ -275,8 +269,6 @@ function App() {
       {/* Main Content Area */}
       {currentView === 'spares' ? (
         <SpareItems />
-      ) : currentView === 'cpu' ? (
-        <CpuAnalytics sets={sets} />
       ) : (
         <>
           {/* STATS DASHBOARD (Collapsible) */}
@@ -577,94 +569,3 @@ const IDBlock = ({ label, id, val, color = "text-cyan-600/70" }) => (
 );
 
 export default App;
-
-const CpuAnalytics = ({ sets }) => {
-  // Logic for CPU Stats
-  const totalCpus = sets.length;
-  const assignedCpus = sets.filter(s => s.status === 'Assigned').length;
-  const freeCpus = sets.filter(s => s.status === 'Free').length;
-
-  // Logic for "Complete Sets" (Pure Pure Sets)
-  // Must have: CPU ID, Mon 1 ID, Mouse ID, KB ID, Cam ID
-  const completeSets = sets.filter(s =>
-    s.ids.cpu &&
-    s.ids.dis1 &&
-    s.ids.mouse &&
-    s.ids.key &&
-    s.ids.cam
-  );
-
-  return (
-    <div className="space-y-8 animation-fade-in">
-
-      {/* 1. CPU Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6 flex items-center justify-between border-l-4 border-blue-500">
-          <div>
-            <p className="text-gray-400 text-sm uppercase font-bold tracking-wider">Total CPUs</p>
-            <h3 className="text-4xl font-bold text-white mt-1">{totalCpus}</h3>
-          </div>
-          <div className="text-4xl">🖥️</div>
-        </div>
-
-        <div className="glass-card p-6 flex items-center justify-between border-l-4 border-green-500">
-          <div>
-            <p className="text-gray-400 text-sm uppercase font-bold tracking-wider">Free CPUs</p>
-            <h3 className="text-4xl font-bold text-green-400 mt-1">{freeCpus}</h3>
-          </div>
-          <div className="text-4xl">✅</div>
-        </div>
-
-        <div className="glass-card p-6 flex items-center justify-between border-l-4 border-cyan-500">
-          <div>
-            <p className="text-gray-400 text-sm uppercase font-bold tracking-wider">Assigned CPUs</p>
-            <h3 className="text-4xl font-bold text-cyan-400 mt-1">{assignedCpus}</h3>
-          </div>
-          <div className="text-4xl">👤</div>
-        </div>
-      </div>
-
-      {/* 2. Complete Sets List */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-          <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-lg border border-yellow-500/30 text-sm">✨ Pure Sets</span>
-          Complete Desktop Setups within Inventory
-        </h2>
-        <p className="text-gray-400 mb-6 text-sm">Listing assets that have ALL components: CPU + Monitor + Mouse + Keyboard + Camera.</p>
-
-        {completeSets.length === 0 ? (
-          <div className="glass-card p-12 text-center text-gray-500 italic">
-            No complete sets found. (Check if IDs are filled for all components)
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {completeSets.map(set => (
-              <div key={set.id} className="glass-card p-5 relative overflow-hidden group hover:border-yellow-400/50 transition-all">
-                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20">
-                  <span className="text-6xl">🏆</span>
-                </div>
-
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-yellow-100">{set.setName}</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded border ${set.status === 'Free' ? 'border-green-500 text-green-400' : 'border-cyan-500 text-cyan-400'}`}>{set.status}</span>
-                  </div>
-                  {set.status === 'Assigned' && <div className="text-right"><span className="text-xs text-gray-500 block">Assigned To</span><span className="text-sm font-bold text-cyan-300">{set.assignee}</span></div>}
-                </div>
-
-                <div className="space-y-2 text-sm text-gray-300 bg-black/20 p-3 rounded border border-white/5">
-                  <div className="flex justify-between"><span>🖥️ CPU</span> <span className="text-gray-400 font-mono">{set.ids.cpu}</span></div>
-                  <div className="flex justify-between"><span>📺 Mon 1</span> <span className="text-gray-400 font-mono">{set.ids.dis1}</span></div>
-                  <div className="flex justify-between"><span>🖱️ Mouse</span> <span className="text-gray-400 font-mono">{set.ids.mouse}</span></div>
-                  <div className="flex justify-between"><span>⌨️ Keybd</span> <span className="text-gray-400 font-mono">{set.ids.key}</span></div>
-                  <div className="flex justify-between"><span>📷 Cam</span> <span className="text-gray-400 font-mono">{set.ids.cam}</span></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-    </div>
-  );
-}
