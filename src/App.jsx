@@ -350,7 +350,7 @@ function App() {
 
             {/* INPUT FORM */}
             <div className="lg:col-span-1">
-              <form onSubmit={handleSubmit} className={`glass-card p-6 space-y-5 sticky top-8 border-t-4 ${editingId ? 'border-yellow-400 shadow-yellow-500/20' : 'border-cyan-500'}`}>
+              <form onSubmit={handleSubmit} className={`glass-card p-6 space-y-5 sticky top-8 border-t-4 max-h-[85vh] overflow-y-auto custom-scrollbar ${editingId ? 'border-yellow-400 shadow-yellow-500/20' : 'border-cyan-500'}`}>
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold text-white">{editingId ? '✏️ Edit Asset Set' : '➕ Add New Asset Set'}</h2>
                   {editingId && <button type="button" onClick={handleCancelEdit} className="text-xs text-red-400 underline">Cancel Edit</button>}
