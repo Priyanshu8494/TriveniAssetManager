@@ -12,7 +12,7 @@ function App() {
 
   const [editingId, setEditingId] = useState(null);
   const [showStats, setShowStats] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('All'); // 'All' | 'Desktop' | 'Laptop' | 'Monitor'
+  const [detailCategory, setDetailCategory] = useState(null); // null | 'Desktop' | 'Laptop' | 'Monitor'
 
   // Firebase Read Listener
   useEffect(() => {
@@ -227,429 +227,504 @@ function App() {
     return { totalDisplays, freeDisplays, brandCount, sizeCount, totalDesktops, freeDesktops, assignedDesktops, totalLaptops, freeLaptops, assignedLaptops };
   }, [sets]);
 
-  // Main Stats
-  const totalSets = sets.length;
   const freeSets = sets.filter(s => s.status === 'Free').length;
   const faulty = sets.filter(s => s.status === 'Faulty').length;
 
-  // Filtered Sets for Display
-  const filteredSets = useMemo(() => {
-    switch (activeFilter) {
-      case 'Desktop': return sets.filter(s => s.category !== 'Laptop');
-      case 'Laptop': return sets.filter(s => s.category === 'Laptop');
-      case 'Monitor': return sets.filter(s => s.display1?.brand || s.display2?.brand);
-      default: return sets;
+  // Detail View Data Logic
+  const detailData = useMemo(() => {
+    if (!detailCategory) return [];
+
+    let filtered = [];
+    switch (detailCategory) {
+      case 'Desktop': filtered = sets.filter(s => s.category !== 'Laptop'); break;
+      case 'Laptop': filtered = sets.filter(s => s.category === 'Laptop'); break;
+      case 'Monitor': filtered = sets.filter(s => s.display1?.brand || s.display2?.brand); break;
+      default: filtered = [];
     }
-  }, [sets, activeFilter]);
+
+    // Sort: Assigned First, then Free
+    return filtered.sort((a, b) => {
+      const statusOrder = { 'Assigned': 1, 'Faulty': 2, 'Free': 3 };
+      const rankA = statusOrder[a.status] || 99;
+      const rankB = statusOrder[b.status] || 99;
+      return rankA - rankB;
+    });
+  }, [sets, detailCategory]);
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
 
-      {/* Header */}
-      <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-        <div>
-          <h1 className="text-3xl font-bold">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">ASSET MANAGER</span>
-            <span className="text-[10px] text-gray-600 ml-2 font-mono tracking-widest relative -top-1">by priyanshu</span>
-          </h1>
-          <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-4">
+      {/* Detail View Overlay */}
+      {detailCategory ? (
+        <div className="animation-fade-in">
           <button
-            onClick={() => setCurrentView('dashboard')}
-            className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'dashboard' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
+            onClick={() => setDetailCategory(null)}
+            className="mb-6 flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-bold"
           >
-            💻 Assets
-          </button>
-          <button
-            onClick={() => setCurrentView('spares')}
-            className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'spares' ? 'bg-purple-500 text-white border-purple-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
-          >
-            🔌 Spares
+            ⬅ Back to Dashboard
           </button>
 
-          <div className="glass-card px-4 py-2 text-center min-w-[80px]">
-            <span className="block text-xs text-gray-400">Total Sets</span>
-            <span className="text-xl font-bold text-white">{totalSets}</span>
-          </div>
-          <div className="glass-card px-4 py-2 text-center border-green-500/30 min-w-[80px]">
-            <span className="block text-xs text-gray-400">Free Sets</span>
-            <span className="text-xl font-bold text-green-400">{freeSets}</span>
-          </div>
-          {currentView === 'dashboard' && (
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2 border ${showStats ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-cyan-400 border-cyan-500/30'}`}
-            >
-              📊 Analysis
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      {currentView === 'spares' ? (
-        <SpareItems />
-      ) : (
-        <>
-          {/* STATS DASHBOARD (Collapsible) */}
-          {showStats && (
-            <div className="glass-card p-6 mb-8 border-t-4 border-purple-500 animation-fade-in">
-              <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">📦 Detailed Inventory Analysis</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-                {/* Desktop Overview */}
-                {/* Desktop Overview */}
-                <div
-                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Desktop' ? 'bg-cyan-900/40 border-cyan-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
-                  onClick={() => setActiveFilter(activeFilter === 'Desktop' ? 'All' : 'Desktop')}
-                >
-                  <h4 className="text-cyan-400 font-bold mb-3 uppercase text-xs tracking-wider">Desktop Overview</h4>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Total</span>
-                    <span className="text-2xl font-bold text-white">{stats.totalDesktops}</span>
-                  </div>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Assigned</span>
-                    <span className="text-2xl font-bold text-blue-400">{stats.assignedDesktops}</span>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <span className="text-gray-400">Free</span>
-                    <span className="text-2xl font-bold text-green-400">{stats.freeDesktops}</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: `${stats.totalDesktops ? (stats.assignedDesktops / stats.totalDesktops) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Laptop Overview */}
-                {/* Laptop Overview */}
-                <div
-                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Laptop' ? 'bg-yellow-900/40 border-yellow-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
-                  onClick={() => setActiveFilter(activeFilter === 'Laptop' ? 'All' : 'Laptop')}
-                >
-                  <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">Laptop Overview</h4>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Total</span>
-                    <span className="text-2xl font-bold text-white">{stats.totalLaptops}</span>
-                  </div>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Assigned</span>
-                    <span className="text-2xl font-bold text-blue-400">{stats.assignedLaptops}</span>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <span className="text-gray-400">Free</span>
-                    <span className="text-2xl font-bold text-green-400">{stats.freeLaptops}</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500" style={{ width: `${stats.totalLaptops ? (stats.assignedLaptops / stats.totalLaptops) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Monitor Overview */}
-                {/* Monitor Overview */}
-                <div
-                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Monitor' ? 'bg-purple-900/40 border-purple-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
-                  onClick={() => setActiveFilter(activeFilter === 'Monitor' ? 'All' : 'Monitor')}
-                >
-                  <h4 className="text-purple-400 font-bold mb-3 uppercase text-xs tracking-wider">Monitor Overview</h4>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-gray-400">Total Monitors</span>
-                    <span className="text-2xl font-bold text-white">{stats.totalDisplays}</span>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <span className="text-gray-400">Free Monitors</span>
-                    <span className="text-2xl font-bold text-green-400">{stats.freeDisplays}</span>
-                  </div>
-                  <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500" style={{ width: `${stats.totalDisplays ? (stats.freeDisplays / stats.totalDisplays) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-
-                {/* Brand Breakdown */}
-                <div className="bg-black/20 p-4 rounded-lg">
-                  <h4 className="text-pink-400 font-bold mb-3 uppercase text-xs tracking-wider">By Brand (Monitors)</h4>
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                    {Object.keys(stats.brandCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
-                    {Object.entries(stats.brandCount).map(([brand, count]) => (
-                      <div key={brand} className="flex justify-between text-sm">
-                        <span className="text-gray-300">{brand}</span>
-                        <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Size Breakdown */}
-                <div className="bg-black/20 p-4 rounded-lg">
-                  <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">By Size (Monitors)</h4>
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                    {Object.keys(stats.sizeCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
-                    {Object.entries(stats.sizeCount).map(([size, count]) => (
-                      <div key={size} className="flex justify-between text-sm">
-                        <span className="text-gray-300">{size}</span>
-                        <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className={`text-3xl font-bold uppercase tracking-wider ${detailCategory === 'Desktop' ? 'text-cyan-400' :
+              detailCategory === 'Laptop' ? 'text-yellow-400' :
+                'text-purple-400'
+              }`}>
+              {detailCategory} Overview
+            </h2>
+            <div className="glass-card px-4 py-2 border-white/10">
+              <span className="text-gray-400 text-xs uppercase mr-2">Total</span>
+              <span className="text-xl font-bold text-white">{detailData.length}</span>
             </div>
-          )}
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* INPUT FORM */}
-            <div className="lg:col-span-1">
-              <form onSubmit={handleSubmit} className={`glass-card p-6 space-y-5 sticky top-8 border-t-4 max-h-[85vh] overflow-y-auto custom-scrollbar ${editingId ? 'border-yellow-400 shadow-yellow-500/20' : 'border-cyan-500'}`}>
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-white">{editingId ? '✏️ Edit Asset Set' : '➕ Add New Asset Set'}</h2>
-                  {editingId && <button type="button" onClick={handleCancelEdit} className="text-xs text-red-400 underline">Cancel Edit</button>}
-                </div>
-
-                {/* Core Info */}
-                <div className={`space-y-4 p-4 rounded-lg ${editingId ? 'bg-yellow-500/10' : 'bg-black/20'}`}>
-
-                  {/* Category Selection */}
+          <div className="space-y-4">
+            {detailData.map((set) => (
+              <div key={set.id} className="glass-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 hover:bg-white/5 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className={`p-4 rounded-lg text-2xl ${set.category === 'Laptop' ? 'bg-yellow-500/20' : 'bg-cyan-500/20'}`}>
+                    {set.category === 'Laptop' ? '💻' : '🖥️'}
+                  </div>
                   <div>
-                    <label className="text-xs text-cyan-400 uppercase font-bold">Category</label>
-                    <div className="flex gap-2 mt-1">
-                      <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Desktop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
-                        <input type="radio" name="category" value="Desktop" checked={form.category === 'Desktop'} onChange={handleChange} className="hidden" />
-                        Desktop
-                      </label>
-                      <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Laptop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
-                        <input type="radio" name="category" value="Laptop" checked={form.category === 'Laptop'} onChange={handleChange} className="hidden" />
-                        Laptop
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs text-cyan-400 uppercase font-bold">Asset Set Name</label>
-                      <input
-                        type="text" name="setName" placeholder="e.g. TGA01"
-                        value={form.setName} onChange={handleChange}
-                        className="glass-input text-lg font-mono tracking-wider font-bold text-cyan-300"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-gray-500 uppercase">CPU ID</label>
-                      <input
-                        type="text" name="cpu" placeholder="Auto"
-                        value={form.ids.cpu} onChange={handleIdChange}
-                        className="glass-input text-sm font-mono bg-cyan-900/20 border-cyan-500/30"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-400 uppercase">Status</label>
-                      <select name="status" value={form.status} onChange={handleChange} className="glass-input bg-slate-800">
-                        <option value="Free">🟢 Free</option>
-                        <option value="Assigned">🔵 Assigned</option>
-                        <option value="Faulty">🔴 Faulty</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-400 uppercase">Assign To</label>
-                      <input
-                        type="text" name="assignee" placeholder="User Name"
-                        value={form.assignee} onChange={handleChange}
-                        className="glass-input"
-                        disabled={form.status !== 'Assigned'}
-                      />
-                    </div>
+                    <h3 className="text-xl font-bold text-white">{set.setName}</h3>
+                    <p className="text-sm text-gray-400 font-mono">{set.ids.cpu}</p>
                   </div>
                 </div>
 
-                {/* Display 1 */}
-                <div className="space-y-3 p-3 rounded bg-purple-500/5 border border-purple-500/20">
-                  <label className="text-xs text-purple-400 uppercase font-bold block">Monitor 1</label>
-
-                  <div>
-                    <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
-                    <input
-                      type="text" name="dis1"
-                      value={form.ids.dis1} onChange={handleIdChange}
-                      placeholder="Monitor 1 ID"
-                      className="glass-input font-mono text-sm bg-purple-500/10 border-purple-500/30 text-purple-300"
-                    />
+                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                  <div className="text-right">
+                    <span className={`block text-xs uppercase font-bold mb-1 ${set.status === 'Assigned' ? 'text-blue-400' :
+                      set.status === 'Free' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                      {set.status}
+                    </span>
+                    {set.status === 'Assigned' && <span className="text-white text-lg font-medium">{set.assignee}</span>}
                   </div>
 
-                  <input
-                    type="text" name="brand" placeholder="Brand (e.g. Dell)"
-                    value={form.display1.brand} onChange={(e) => handleChange(e, 'display1')}
-                    className="glass-input"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" name="model" placeholder="Model" value={form.display1.model} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
-                    <input type="text" name="size" placeholder="Size" value={form.display1.size} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
-                  </div>
-                </div>
-
-                {/* Display 2 */}
-                {/* Display 2 - Only for Desktop */}
-                {form.category !== 'Laptop' && (
-                  <div className="space-y-3 p-3 rounded bg-pink-500/5 border border-pink-500/20">
-                    <label className="text-xs text-pink-400 uppercase font-bold block">Monitor 2</label>
-
-                    <div>
-                      <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
-                      <input
-                        type="text" name="dis2"
-                        value={form.ids.dis2} onChange={handleIdChange}
-                        placeholder="Monitor 2 ID"
-                        className="glass-input font-mono text-sm bg-pink-500/10 border-pink-500/30 text-pink-300"
-                      />
-                    </div>
-
-                    <input
-                      type="text" name="brand" placeholder="Brand"
-                      value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
-                      className="glass-input"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" name="model" placeholder="Model" value={form.display2.model} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
-                      <input type="text" name="size" placeholder="Size" value={form.display2.size} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Accessories */}
-                <div className="space-y-3">
-                  <label className="text-xs text-gray-400 uppercase border-b border-white/10 w-full block pb-1">Accessories (ID & Model)</label>
-
-                  <div className="grid grid-cols-6 gap-2 items-center">
-                    <span className="col-span-1 text-[10px] text-gray-500">MOUSE</span>
-                    <input type="text" name="mouse" value={form.ids.mouse} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                    <input type="text" name="mouse" value={form.peripherals.mouse} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                  </div>
-
-                  {/* Keyboard - Only for Desktop */}
-                  {form.category !== 'Laptop' && (
-                    <div className="grid grid-cols-6 gap-2 items-center">
-                      <span className="col-span-1 text-[10px] text-gray-500">KEYBD</span>
-                      <input type="text" name="key" value={form.ids.key} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                      <input type="text" name="keyboard" value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-6 gap-2 items-center">
-                    <span className="col-span-1 text-[10px] text-gray-500">AUDIO</span>
-                    <input type="text" name="head" value={form.ids.head} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                    <input type="text" name="headphone" value={form.peripherals.headphone} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                  </div>
-
-                  {/* Camera - Only for Desktop */}
-                  {form.category !== 'Laptop' && (
-                    <div className="grid grid-cols-6 gap-2 items-center">
-                      <span className="col-span-1 text-[10px] text-gray-500">CAM</span>
-                      <input type="text" name="cam" value={form.ids.cam} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                      <input type="text" name="camera" value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                    </div>
-                  )}
-                </div>
-
-                <button type="submit" className={`triveni-btn w-full mt-4 py-3 text-lg ${editingId ? 'from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400' : ''}`}>
-                  {editingId ? '💾 Update Changes' : '💾 Save Asset Set'}
-                </button>
-                <button type="button" onClick={handleExport} className="bg-green-600/20 hover:bg-green-600/40 text-green-400 w-full py-2 rounded border border-green-500/30 text-sm font-mono">
-                  export to excel
-                </button>
-              </form>
-            </div>
-
-            {/* ASSET LIST */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-white">Inventory List</h2>
-                  {activeFilter !== 'All' && (
-                    <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-gray-300 flex items-center gap-1">
-                      Filtered: {activeFilter} <button onClick={() => setActiveFilter('All')} className="hover:text-white">✕</button>
+                  {set.status === 'Free' && (
+                    <span className="px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/30 rounded text-xs">
+                      Available
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-gray-500">Live Sync (Firebase)</span>
-                <span className={`text-[10px] px-2 py-1 rounded-full ${loading ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>{loading ? 'Connecting...' : '● Online'}</span>
               </div>
+            ))}
+            {detailData.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                No items found for this category.
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
 
-              {filteredSets.length === 0 && !loading ? (
-                <div className="glass-card p-12 text-center text-gray-500">
-                  <p>No assets found.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredSets.map((set) => (
-                    <div key={set.id} className={`glass-card p-0 overflow-hidden relative group ${set.status === 'Faulty' ? 'border-red-500/50' : ''} ${editingId === set.id ? 'ring-2 ring-yellow-400' : ''}`}>
+          {/* Header */}
+          <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <div>
+              <h1 className="text-3xl font-bold">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-500">ASSET MANAGER</span>
+                <span className="text-[10px] text-gray-600 ml-2 font-mono tracking-widest relative -top-1">by priyanshu</span>
+              </h1>
+              <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'dashboard' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
+              >
+                💻 Assets
+              </button>
+              <button
+                onClick={() => setCurrentView('spares')}
+                className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'spares' ? 'bg-purple-500 text-white border-purple-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
+              >
+                🔌 Spares
+              </button>
 
-                      {/* Header */}
-                      <div className="p-4 bg-white/5 border-b border-white/10 flex flex-col md:flex-row justify-between md:items-center gap-2">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-3 rounded-lg font-bold text-xl ${set.status === 'Faulty' ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-300'}`}>
-                            {set.category === 'Laptop' ? '💻' : '🖥️'} {set.setName}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs px-2 py-0.5 rounded-full border ${set.status === 'Free' ? 'border-green-500 text-green-400 bg-green-500/10' :
-                                set.status === 'Assigned' ? 'border-blue-500 text-blue-400 bg-blue-500/10' :
-                                  'border-red-500 text-red-400 bg-red-500/10'
-                                }`}>
-                                {set.status}
-                              </span>
-                              {set.status === 'Assigned' && <span className="text-sm text-gray-300">👤 {set.assignee}</span>}
-                            </div>
-                            <p className="text-xs text-gray-500 font-mono mt-1">CPU ID: {set.ids.cpu}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleEdit(set)} className="text-yellow-400 text-xs px-3 py-1 border border-yellow-500/30 rounded hover:bg-yellow-500/10 transition-all">
-                            ✏️ Edit
-                          </button>
-                          <button onClick={() => handleDelete(set.id)} className="text-red-500 text-xs hover:text-red-400 px-3 py-1 border border-red-500/30 rounded opacity-50 hover:opacity-100 transition-all">
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* IDs Grid */}
-                      <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                        <IDBlock label="Mon 1" id={set.ids.dis1} val={`${set.display1?.brand || ''} ${set.display1?.size || ''}`} color="text-purple-400" />
-                        <IDBlock label="Mon 2" id={set.ids.dis2} val={`${set.display2?.brand || ''} ${set.display2?.size || ''}`} color="text-pink-400" />
-
-                        <IDBlock label="Mouse" id={set.ids.mouse} val={set.peripherals.mouse} />
-                        <IDBlock label="Keyboard" id={set.ids.key} val={set.peripherals.keyboard} />
-                        <IDBlock label="Headphone" id={set.ids.head} val={set.peripherals.headphone} />
-                        <IDBlock label="Camera" id={set.ids.cam} val={set.peripherals.camera} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="glass-card px-4 py-2 text-center min-w-[80px]">
+                <span className="block text-xs text-gray-400">Total Sets</span>
+                <span className="text-xl font-bold text-white">{totalSets}</span>
+              </div>
+              <div className="glass-card px-4 py-2 text-center border-green-500/30 min-w-[80px]">
+                <span className="block text-xs text-gray-400">Free Sets</span>
+                <span className="text-xl font-bold text-green-400">{freeSets}</span>
+              </div>
+              {currentView === 'dashboard' && (
+                <button
+                  onClick={() => setShowStats(!showStats)}
+                  className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2 border ${showStats ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-cyan-400 border-cyan-500/30'}`}
+                >
+                  📊 Analysis
+                </button>
               )}
             </div>
+          </header>
 
-          </div>
-        </>
-      )}
+          {/* Main Content Area */}
+          {currentView === 'spares' ? (
+            <SpareItems />
+          ) : (
+            <>
+              {/* STATS DASHBOARD (Collapsible) */}
+              {showStats && (
+                <div className="glass-card p-6 mb-8 border-t-4 border-purple-500 animation-fade-in">
+                  <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">📦 Detailed Inventory Analysis</h3>
 
-    </div>
-  );
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                    {/* Desktop Overview */}
+                    {/* Desktop Overview */}
+                    <div
+                      className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-cyan-500/30 group"
+                      onClick={() => setDetailCategory('Desktop')}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-cyan-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Desktop Overview</h4>
+                        <span className="text-gray-500 text-[10px]">Click for Details</span>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-gray-400">Total</span>
+                        <span className="text-2xl font-bold text-white">{stats.totalDesktops}</span>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-gray-400">Assigned</span>
+                        <span className="text-2xl font-bold text-blue-400">{stats.assignedDesktops}</span>
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <span className="text-gray-400">Free</span>
+                        <span className="text-2xl font-bold text-green-400">{stats.freeDesktops}</span>
+                      </div>
+                      <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500" style={{ width: `${stats.totalDesktops ? (stats.assignedDesktops / stats.totalDesktops) * 100 : 0}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* Laptop Overview */}
+                    {/* Laptop Overview */}
+                    <div
+                      className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-yellow-500/30 group"
+                      onClick={() => setDetailCategory('Laptop')}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Laptop Overview</h4>
+                        <span className="text-gray-500 text-[10px]">Click for Details</span>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-gray-400">Total</span>
+                        <span className="text-2xl font-bold text-white">{stats.totalLaptops}</span>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-gray-400">Assigned</span>
+                        <span className="text-2xl font-bold text-blue-400">{stats.assignedLaptops}</span>
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <span className="text-gray-400">Free</span>
+                        <span className="text-2xl font-bold text-green-400">{stats.freeLaptops}</span>
+                      </div>
+                      <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-yellow-500" style={{ width: `${stats.totalLaptops ? (stats.assignedLaptops / stats.totalLaptops) * 100 : 0}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* Monitor Overview */}
+                    {/* Monitor Overview */}
+                    <div
+                      className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-purple-500/30 group"
+                      onClick={() => setDetailCategory('Monitor')}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-purple-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Monitor Overview</h4>
+                        <span className="text-gray-500 text-[10px]">Click for Details</span>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-gray-400">Total Monitors</span>
+                        <span className="text-2xl font-bold text-white">{stats.totalDisplays}</span>
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <span className="text-gray-400">Free Monitors</span>
+                        <span className="text-2xl font-bold text-green-400">{stats.freeDisplays}</span>
+                      </div>
+                      <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500" style={{ width: `${stats.totalDisplays ? (stats.freeDisplays / stats.totalDisplays) * 100 : 0}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* Brand Breakdown */}
+                    <div className="bg-black/20 p-4 rounded-lg">
+                      <h4 className="text-pink-400 font-bold mb-3 uppercase text-xs tracking-wider">By Brand (Monitors)</h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        {Object.keys(stats.brandCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
+                        {Object.entries(stats.brandCount).map(([brand, count]) => (
+                          <div key={brand} className="flex justify-between text-sm">
+                            <span className="text-gray-300">{brand}</span>
+                            <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Size Breakdown */}
+                    <div className="bg-black/20 p-4 rounded-lg">
+                      <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">By Size (Monitors)</h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        {Object.keys(stats.sizeCount).length === 0 && <span className="text-gray-600 italic text-sm">No data</span>}
+                        {Object.entries(stats.sizeCount).map(([size, count]) => (
+                          <div key={size} className="flex justify-between text-sm">
+                            <span className="text-gray-300">{size}</span>
+                            <span className="font-mono font-bold text-white bg-white/10 px-2 rounded">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                {/* INPUT FORM */}
+                <div className="lg:col-span-1">
+                  <form onSubmit={handleSubmit} className={`glass-card p-6 space-y-5 sticky top-8 border-t-4 max-h-[85vh] overflow-y-auto custom-scrollbar ${editingId ? 'border-yellow-400 shadow-yellow-500/20' : 'border-cyan-500'}`}>
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-white">{editingId ? '✏️ Edit Asset Set' : '➕ Add New Asset Set'}</h2>
+                      {editingId && <button type="button" onClick={handleCancelEdit} className="text-xs text-red-400 underline">Cancel Edit</button>}
+                    </div>
+
+                    {/* Core Info */}
+                    <div className={`space-y-4 p-4 rounded-lg ${editingId ? 'bg-yellow-500/10' : 'bg-black/20'}`}>
+
+                      {/* Category Selection */}
+                      <div>
+                        <label className="text-xs text-cyan-400 uppercase font-bold">Category</label>
+                        <div className="flex gap-2 mt-1">
+                          <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Desktop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
+                            <input type="radio" name="category" value="Desktop" checked={form.category === 'Desktop'} onChange={handleChange} className="hidden" />
+                            Desktop
+                          </label>
+                          <label className={`flex-1 p-2 rounded cursor-pointer text-center border transition-all ${form.category === 'Laptop' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/40 text-gray-400 border-white/10'}`}>
+                            <input type="radio" name="category" value="Laptop" checked={form.category === 'Laptop'} onChange={handleChange} className="hidden" />
+                            Laptop
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-cyan-400 uppercase font-bold">Asset Set Name</label>
+                          <input
+                            type="text" name="setName" placeholder="e.g. TGA01"
+                            value={form.setName} onChange={handleChange}
+                            className="glass-input text-lg font-mono tracking-wider font-bold text-cyan-300"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-500 uppercase">CPU ID</label>
+                          <input
+                            type="text" name="cpu" placeholder="Auto"
+                            value={form.ids.cpu} onChange={handleIdChange}
+                            className="glass-input text-sm font-mono bg-cyan-900/20 border-cyan-500/30"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-400 uppercase">Status</label>
+                          <select name="status" value={form.status} onChange={handleChange} className="glass-input bg-slate-800">
+                            <option value="Free">🟢 Free</option>
+                            <option value="Assigned">🔵 Assigned</option>
+                            <option value="Faulty">🔴 Faulty</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 uppercase">Assign To</label>
+                          <input
+                            type="text" name="assignee" placeholder="User Name"
+                            value={form.assignee} onChange={handleChange}
+                            className="glass-input"
+                            disabled={form.status !== 'Assigned'}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Display 1 */}
+                    <div className="space-y-3 p-3 rounded bg-purple-500/5 border border-purple-500/20">
+                      <label className="text-xs text-purple-400 uppercase font-bold block">Monitor 1</label>
+
+                      <div>
+                        <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                        <input
+                          type="text" name="dis1"
+                          value={form.ids.dis1} onChange={handleIdChange}
+                          placeholder="Monitor 1 ID"
+                          className="glass-input font-mono text-sm bg-purple-500/10 border-purple-500/30 text-purple-300"
+                        />
+                      </div>
+
+                      <input
+                        type="text" name="brand" placeholder="Brand (e.g. Dell)"
+                        value={form.display1.brand} onChange={(e) => handleChange(e, 'display1')}
+                        className="glass-input"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input type="text" name="model" placeholder="Model" value={form.display1.model} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
+                        <input type="text" name="size" placeholder="Size" value={form.display1.size} onChange={(e) => handleChange(e, 'display1')} className="glass-input" />
+                      </div>
+                    </div>
+
+                    {/* Display 2 */}
+                    {/* Display 2 - Only for Desktop */}
+                    {form.category !== 'Laptop' && (
+                      <div className="space-y-3 p-3 rounded bg-pink-500/5 border border-pink-500/20">
+                        <label className="text-xs text-pink-400 uppercase font-bold block">Monitor 2</label>
+
+                        <div>
+                          <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                          <input
+                            type="text" name="dis2"
+                            value={form.ids.dis2} onChange={handleIdChange}
+                            placeholder="Monitor 2 ID"
+                            className="glass-input font-mono text-sm bg-pink-500/10 border-pink-500/30 text-pink-300"
+                          />
+                        </div>
+
+                        <input
+                          type="text" name="brand" placeholder="Brand"
+                          value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
+                          className="glass-input"
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <input type="text" name="model" placeholder="Model" value={form.display2.model} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
+                          <input type="text" name="size" placeholder="Size" value={form.display2.size} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Accessories */}
+                    <div className="space-y-3">
+                      <label className="text-xs text-gray-400 uppercase border-b border-white/10 w-full block pb-1">Accessories (ID & Model)</label>
+
+                      <div className="grid grid-cols-6 gap-2 items-center">
+                        <span className="col-span-1 text-[10px] text-gray-500">MOUSE</span>
+                        <input type="text" name="mouse" value={form.ids.mouse} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                        <input type="text" name="mouse" value={form.peripherals.mouse} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                      </div>
+
+                      {/* Keyboard - Only for Desktop */}
+                      {form.category !== 'Laptop' && (
+                        <div className="grid grid-cols-6 gap-2 items-center">
+                          <span className="col-span-1 text-[10px] text-gray-500">KEYBD</span>
+                          <input type="text" name="key" value={form.ids.key} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                          <input type="text" name="keyboard" value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-6 gap-2 items-center">
+                        <span className="col-span-1 text-[10px] text-gray-500">AUDIO</span>
+                        <input type="text" name="head" value={form.ids.head} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                        <input type="text" name="headphone" value={form.peripherals.headphone} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                      </div>
+
+                      {/* Camera - Only for Desktop */}
+                      {form.category !== 'Laptop' && (
+                        <div className="grid grid-cols-6 gap-2 items-center">
+                          <span className="col-span-1 text-[10px] text-gray-500">CAM</span>
+                          <input type="text" name="cam" value={form.ids.cam} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                          <input type="text" name="camera" value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="submit" className={`triveni-btn w-full mt-4 py-3 text-lg ${editingId ? 'from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400' : ''}`}>
+                      {editingId ? '💾 Update Changes' : '💾 Save Asset Set'}
+                    </button>
+                    <button type="button" onClick={handleExport} className="bg-green-600/20 hover:bg-green-600/40 text-green-400 w-full py-2 rounded border border-green-500/30 text-sm font-mono">
+                      export to excel
+                    </button>
+                  </form>
+                </div>
+
+                {/* ASSET LIST */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-white">Inventory List</h2>
+                    <span className="text-xs text-gray-500">Live Sync (Firebase)</span>
+                    <span className={`text-[10px] px-2 py-1 rounded-full ${loading ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>{loading ? 'Connecting...' : '● Online'}</span>
+                  </div>
+
+                  {sets.length === 0 && !loading ? (
+                    <div className="glass-card p-12 text-center text-gray-500">
+                      <p>No assets found.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {sets.map((set) => (
+                        <div key={set.id} className={`glass-card p-0 overflow-hidden relative group ${set.status === 'Faulty' ? 'border-red-500/50' : ''} ${editingId === set.id ? 'ring-2 ring-yellow-400' : ''}`}>
+
+                          {/* Header */}
+                          <div className="p-4 bg-white/5 border-b border-white/10 flex flex-col md:flex-row justify-between md:items-center gap-2">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-3 rounded-lg font-bold text-xl ${set.status === 'Faulty' ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-300'}`}>
+                                {set.category === 'Laptop' ? '💻' : '🖥️'} {set.setName}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs px-2 py-0.5 rounded-full border ${set.status === 'Free' ? 'border-green-500 text-green-400 bg-green-500/10' :
+                                    set.status === 'Assigned' ? 'border-blue-500 text-blue-400 bg-blue-500/10' :
+                                      'border-red-500 text-red-400 bg-red-500/10'
+                                    }`}>
+                                    {set.status}
+                                  </span>
+                                  {set.status === 'Assigned' && <span className="text-sm text-gray-300">👤 {set.assignee}</span>}
+                                </div>
+                                <p className="text-xs text-gray-500 font-mono mt-1">CPU ID: {set.ids.cpu}</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => handleEdit(set)} className="text-yellow-400 text-xs px-3 py-1 border border-yellow-500/30 rounded hover:bg-yellow-500/10 transition-all">
+                                ✏️ Edit
+                              </button>
+                              <button onClick={() => handleDelete(set.id)} className="text-red-500 text-xs hover:text-red-400 px-3 py-1 border border-red-500/30 rounded opacity-50 hover:opacity-100 transition-all">
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* IDs Grid */}
+                          <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                            <IDBlock label="Mon 1" id={set.ids.dis1} val={`${set.display1?.brand || ''} ${set.display1?.size || ''}`} color="text-purple-400" />
+                            <IDBlock label="Mon 2" id={set.ids.dis2} val={`${set.display2?.brand || ''} ${set.display2?.size || ''}`} color="text-pink-400" />
+
+                            <IDBlock label="Mouse" id={set.ids.mouse} val={set.peripherals.mouse} />
+                            <IDBlock label="Keyboard" id={set.ids.key} val={set.peripherals.keyboard} />
+                            <IDBlock label="Headphone" id={set.ids.head} val={set.peripherals.headphone} />
+                            <IDBlock label="Camera" id={set.ids.cam} val={set.peripherals.camera} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </>
+          )}
+
+        </div>
+      );
 }
 
-const IDBlock = ({ label, id, val, color = "text-cyan-600/70" }) => (
-  <div className="bg-black/20 rounded p-2 border border-white/5">
-    <div className="text-[10px] text-gray-500 uppercase flex justify-between">
-      <span>{label}</span>
-      <span className={color}>{id}</span>
-    </div>
-    <div className="font-medium text-gray-300 truncate h-5">
-      {val || "-"}
-    </div>
-  </div>
-);
+      const IDBlock = ({label, id, val, color = "text-cyan-600/70"}) => (
+      <div className="bg-black/20 rounded p-2 border border-white/5">
+        <div className="text-[10px] text-gray-500 uppercase flex justify-between">
+          <span>{label}</span>
+          <span className={color}>{id}</span>
+        </div>
+        <div className="font-medium text-gray-300 truncate h-5">
+          {val || "-"}
+        </div>
+      </div>
+      );
 
-export default App;
+      export default App;
