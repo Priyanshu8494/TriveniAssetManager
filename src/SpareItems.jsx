@@ -139,14 +139,18 @@ function SpareItems() {
             {/* Inventory Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                    categoryItems.length > 0 && (
-                        <div key={category} className="glass-card p-0 overflow-hidden">
-                            <div className="bg-white/5 p-3 border-b border-white/10 flex justify-between items-center">
-                                <h4 className="font-bold text-cyan-400 uppercase tracking-wider">{category}</h4>
-                                <span className="text-xs text-gray-500">{categoryItems.length} items</span>
-                            </div>
-                            <div className="p-2 space-y-1">
-                                {categoryItems.map(([key, item]) => (
+                    <div key={category} className="glass-card p-0 overflow-hidden">
+                        <div className="bg-white/5 p-3 border-b border-white/10 flex justify-between items-center">
+                            <h4 className="font-bold text-cyan-400 uppercase tracking-wider">{category}</h4>
+                            <span className="text-xs text-gray-500">{categoryItems.length} items</span>
+                        </div>
+                        <div className="p-2 space-y-1">
+                            {categoryItems.length === 0 ? (
+                                <div className="p-4 text-center text-gray-600 text-sm italic">
+                                    No items yet.
+                                </div>
+                            ) : (
+                                categoryItems.map(([key, item]) => (
                                     <div key={key} className="flex items-center justify-between p-2 hover:bg-white/5 rounded group">
                                         <span className="text-gray-300 font-medium text-sm">{item.name}</span>
                                         <div className="flex items-center gap-3">
@@ -171,10 +175,10 @@ function SpareItems() {
                                             </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                ))
+                            )}
                         </div>
-                    )
+                    </div>
                 ))}
             </div>
         </div>
