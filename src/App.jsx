@@ -443,29 +443,32 @@ function App() {
                 </div>
 
                 {/* Display 2 */}
-                <div className="space-y-3 p-3 rounded bg-pink-500/5 border border-pink-500/20">
-                  <label className="text-xs text-pink-400 uppercase font-bold block">Monitor 2</label>
+                {/* Display 2 - Only for Desktop */}
+                {form.category !== 'Laptop' && (
+                  <div className="space-y-3 p-3 rounded bg-pink-500/5 border border-pink-500/20">
+                    <label className="text-xs text-pink-400 uppercase font-bold block">Monitor 2</label>
 
-                  <div>
-                    <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                    <div>
+                      <label className="text-[10px] text-gray-500 uppercase">Asset ID (Tag)</label>
+                      <input
+                        type="text" name="dis2"
+                        value={form.ids.dis2} onChange={handleIdChange}
+                        placeholder="Monitor 2 ID"
+                        className="glass-input font-mono text-sm bg-pink-500/10 border-pink-500/30 text-pink-300"
+                      />
+                    </div>
+
                     <input
-                      type="text" name="dis2"
-                      value={form.ids.dis2} onChange={handleIdChange}
-                      placeholder="Monitor 2 ID"
-                      className="glass-input font-mono text-sm bg-pink-500/10 border-pink-500/30 text-pink-300"
+                      type="text" name="brand" placeholder="Brand"
+                      value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
+                      className="glass-input"
                     />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input type="text" name="model" placeholder="Model" value={form.display2.model} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
+                      <input type="text" name="size" placeholder="Size" value={form.display2.size} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
+                    </div>
                   </div>
-
-                  <input
-                    type="text" name="brand" placeholder="Brand"
-                    value={form.display2.brand} onChange={(e) => handleChange(e, 'display2')}
-                    className="glass-input"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" name="model" placeholder="Model" value={form.display2.model} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
-                    <input type="text" name="size" placeholder="Size" value={form.display2.size} onChange={(e) => handleChange(e, 'display2')} className="glass-input" />
-                  </div>
-                </div>
+                )}
 
                 {/* Accessories */}
                 <div className="space-y-3">
@@ -477,11 +480,14 @@ function App() {
                     <input type="text" name="mouse" value={form.peripherals.mouse} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
                   </div>
 
-                  <div className="grid grid-cols-6 gap-2 items-center">
-                    <span className="col-span-1 text-[10px] text-gray-500">KEYBD</span>
-                    <input type="text" name="key" value={form.ids.key} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                    <input type="text" name="keyboard" value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                  </div>
+                  {/* Keyboard - Only for Desktop */}
+                  {form.category !== 'Laptop' && (
+                    <div className="grid grid-cols-6 gap-2 items-center">
+                      <span className="col-span-1 text-[10px] text-gray-500">KEYBD</span>
+                      <input type="text" name="key" value={form.ids.key} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                      <input type="text" name="keyboard" value={form.peripherals.keyboard} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-6 gap-2 items-center">
                     <span className="col-span-1 text-[10px] text-gray-500">AUDIO</span>
@@ -489,11 +495,14 @@ function App() {
                     <input type="text" name="headphone" value={form.peripherals.headphone} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
                   </div>
 
-                  <div className="grid grid-cols-6 gap-2 items-center">
-                    <span className="col-span-1 text-[10px] text-gray-500">CAM</span>
-                    <input type="text" name="cam" value={form.ids.cam} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
-                    <input type="text" name="camera" value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
-                  </div>
+                  {/* Camera - Only for Desktop */}
+                  {form.category !== 'Laptop' && (
+                    <div className="grid grid-cols-6 gap-2 items-center">
+                      <span className="col-span-1 text-[10px] text-gray-500">CAM</span>
+                      <input type="text" name="cam" value={form.ids.cam} onChange={handleIdChange} placeholder="ID" className="col-span-2 glass-input text-xs px-2 py-1 font-mono" />
+                      <input type="text" name="camera" value={form.peripherals.camera} onChange={(e) => handleChange(e, 'peripherals')} placeholder="Model" className="col-span-3 glass-input text-xs px-2 py-1" />
+                    </div>
+                  )}
                 </div>
 
                 <button type="submit" className={`triveni-btn w-full mt-4 py-3 text-lg ${editingId ? 'from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400' : ''}`}>
