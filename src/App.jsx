@@ -12,6 +12,7 @@ function App() {
 
   const [editingId, setEditingId] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('All'); // 'All' | 'Desktop' | 'Laptop' | 'Monitor'
 
   // Firebase Read Listener
   useEffect(() => {
@@ -231,6 +232,16 @@ function App() {
   const freeSets = sets.filter(s => s.status === 'Free').length;
   const faulty = sets.filter(s => s.status === 'Faulty').length;
 
+  // Filtered Sets for Display
+  const filteredSets = useMemo(() => {
+    switch (activeFilter) {
+      case 'Desktop': return sets.filter(s => s.category !== 'Laptop');
+      case 'Laptop': return sets.filter(s => s.category === 'Laptop');
+      case 'Monitor': return sets.filter(s => s.display1?.brand || s.display2?.brand);
+      default: return sets;
+    }
+  }, [sets, activeFilter]);
+
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
 
@@ -289,7 +300,11 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
                 {/* Desktop Overview */}
-                <div className="bg-black/20 p-4 rounded-lg">
+                {/* Desktop Overview */}
+                <div
+                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Desktop' ? 'bg-cyan-900/40 border-cyan-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
+                  onClick={() => setActiveFilter(activeFilter === 'Desktop' ? 'All' : 'Desktop')}
+                >
                   <h4 className="text-cyan-400 font-bold mb-3 uppercase text-xs tracking-wider">Desktop Overview</h4>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-gray-400">Total</span>
@@ -309,7 +324,11 @@ function App() {
                 </div>
 
                 {/* Laptop Overview */}
-                <div className="bg-black/20 p-4 rounded-lg">
+                {/* Laptop Overview */}
+                <div
+                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Laptop' ? 'bg-yellow-900/40 border-yellow-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
+                  onClick={() => setActiveFilter(activeFilter === 'Laptop' ? 'All' : 'Laptop')}
+                >
                   <h4 className="text-yellow-400 font-bold mb-3 uppercase text-xs tracking-wider">Laptop Overview</h4>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-gray-400">Total</span>
@@ -329,7 +348,11 @@ function App() {
                 </div>
 
                 {/* Monitor Overview */}
-                <div className="bg-black/20 p-4 rounded-lg">
+                {/* Monitor Overview */}
+                <div
+                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${activeFilter === 'Monitor' ? 'bg-purple-900/40 border-purple-400' : 'bg-black/20 border-transparent hover:bg-black/40'}`}
+                  onClick={() => setActiveFilter(activeFilter === 'Monitor' ? 'All' : 'Monitor')}
+                >
                   <h4 className="text-purple-400 font-bold mb-3 uppercase text-xs tracking-wider">Monitor Overview</h4>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-gray-400">Total Monitors</span>
@@ -543,18 +566,25 @@ function App() {
             {/* ASSET LIST */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-white">Inventory List</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-white">Inventory List</h2>
+                  {activeFilter !== 'All' && (
+                    <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-gray-300 flex items-center gap-1">
+                      Filtered: {activeFilter} <button onClick={() => setActiveFilter('All')} className="hover:text-white">✕</button>
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-500">Live Sync (Firebase)</span>
                 <span className={`text-[10px] px-2 py-1 rounded-full ${loading ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>{loading ? 'Connecting...' : '● Online'}</span>
               </div>
 
-              {sets.length === 0 && !loading ? (
+              {filteredSets.length === 0 && !loading ? (
                 <div className="glass-card p-12 text-center text-gray-500">
                   <p>No assets found.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {sets.map((set) => (
+                  {filteredSets.map((set) => (
                     <div key={set.id} className={`glass-card p-0 overflow-hidden relative group ${set.status === 'Faulty' ? 'border-red-500/50' : ''} ${editingId === set.id ? 'ring-2 ring-yellow-400' : ''}`}>
 
                       {/* Header */}
