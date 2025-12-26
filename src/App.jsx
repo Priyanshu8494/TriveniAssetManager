@@ -208,7 +208,12 @@ function App() {
       }
     });
 
-    return { totalDisplays, freeDisplays, brandCount, sizeCount };
+    // CPU Stats
+    const totalCpus = sets.length;
+    const freeCpus = sets.filter(s => s.status === 'Free').length;
+    const assignedCpus = sets.filter(s => s.status === 'Assigned').length;
+
+    return { totalDisplays, freeDisplays, brandCount, sizeCount, totalCpus, freeCpus, assignedCpus };
   }, [sets]);
 
   // Main Stats
@@ -272,6 +277,28 @@ function App() {
               <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">📦 Detailed Inventory Analysis</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {/* CPU Overview (NEW) */}
+                <div className="bg-black/20 p-4 rounded-lg">
+                  <h4 className="text-cyan-400 font-bold mb-3 uppercase text-xs tracking-wider">CPU Overview</h4>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-gray-400">Total CPUs</span>
+                    <span className="text-2xl font-bold text-white">{stats.totalCpus}</span>
+                  </div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-gray-400">Assigned</span>
+                    <span className="text-2xl font-bold text-blue-400">{stats.assignedCpus}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="text-gray-400">Free</span>
+                    <span className="text-2xl font-bold text-green-400">{stats.freeCpus}</span>
+                  </div>
+                  <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                    {/* Blue bar for assigned, Green for free (implied by remainder) */}
+                    <div className="h-full bg-blue-500" style={{ width: `${stats.totalCpus ? (stats.assignedCpus / stats.totalCpus) * 100 : 0}%` }}></div>
+                  </div>
+                </div>
+
                 {/* Monitor Overview */}
                 <div className="bg-black/20 p-4 rounded-lg">
                   <h4 className="text-purple-400 font-bold mb-3 uppercase text-xs tracking-wider">Monitor Overview</h4>
