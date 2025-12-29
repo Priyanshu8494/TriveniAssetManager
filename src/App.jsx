@@ -342,7 +342,11 @@ function App() {
               </button>
 
               {/* Desktop Stats */}
-              <div className="glass-card px-3 py-1.5 text-center border-cyan-500/30 min-w-[90px] flex flex-col justify-center">
+              <div
+                onClick={() => setDetailCategory('Desktop')}
+                title="Click for Details"
+                className="glass-card px-3 py-1.5 text-center border-cyan-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-cyan-400 transition-all"
+              >
                 <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-0.5">Desktop</span>
                 <div className="flex justify-center gap-2 text-xs font-mono">
                   <span className="text-white" title="Total">T:{stats.totalDesktops}</span>
@@ -352,7 +356,11 @@ function App() {
               </div>
 
               {/* Laptop Stats */}
-              <div className="glass-card px-3 py-1.5 text-center border-yellow-500/30 min-w-[90px] flex flex-col justify-center">
+              <div
+                onClick={() => setDetailCategory('Laptop')}
+                title="Click for Details"
+                className="glass-card px-3 py-1.5 text-center border-yellow-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-yellow-400 transition-all"
+              >
                 <span className="text-[10px] text-yellow-400 font-bold uppercase tracking-wider mb-0.5">Laptop</span>
                 <div className="flex justify-center gap-2 text-xs font-mono">
                   <span className="text-white" title="Total">T:{stats.totalLaptops}</span>
@@ -362,7 +370,11 @@ function App() {
               </div>
 
               {/* Monitor Stats */}
-              <div className="glass-card px-3 py-1.5 text-center border-purple-500/30 min-w-[90px] flex flex-col justify-center">
+              <div
+                onClick={() => setDetailCategory('Monitor')}
+                title="Click for Details"
+                className="glass-card px-3 py-1.5 text-center border-purple-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-purple-400 transition-all"
+              >
                 <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-0.5">Monitor</span>
                 <div className="flex justify-center gap-2 text-xs font-mono">
                   <span className="text-white" title="Total">T:{stats.totalDisplays}</span>
