@@ -744,21 +744,23 @@ function App() {
               </div>
             </>
           )}
+        </>
+      )}
 
-        </div>
-      );
+    </div>
+  );
 }
 
-      const IDBlock = ({label, id, val, color = "text-cyan-600/70"}) => (
-      <div className="bg-black/20 rounded p-2 border border-white/5">
-        <div className="text-[10px] text-gray-500 uppercase flex justify-between">
-          <span>{label}</span>
-          <span className={color}>{id}</span>
-        </div>
-        <div className="font-medium text-gray-300 truncate h-5">
-          {val || "-"}
-        </div>
-      </div>
-      );
+const IDBlock = ({ label, id, val, color = "text-cyan-600/70" }) => (
+  <div className="bg-black/20 rounded p-2 border border-white/5">
+    <div className="text-[10px] text-gray-500 uppercase flex justify-between">
+      <span>{label}</span>
+      <span className={color}>{id}</span>
+    </div>
+    <div className="font-medium text-gray-300 truncate h-5">
+      {val || "-"}
+    </div>
+  </div>
+);
 
-      export default App;
+export default App;
