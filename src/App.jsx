@@ -327,7 +327,7 @@ function App() {
               </h1>
               <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
             </div>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setCurrentView('dashboard')}
                 className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'dashboard' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
@@ -341,14 +341,36 @@ function App() {
                 🔌 Spares
               </button>
 
-              <div className="glass-card px-4 py-2 text-center min-w-[80px]">
-                <span className="block text-xs text-gray-400">Total Sets</span>
-                <span className="text-xl font-bold text-white">{totalSets}</span>
+              {/* Desktop Stats */}
+              <div className="glass-card px-3 py-1.5 text-center border-cyan-500/30 min-w-[90px] flex flex-col justify-center">
+                <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-0.5">Desktop</span>
+                <div className="flex justify-center gap-2 text-xs font-mono">
+                  <span className="text-white" title="Total">T:{stats.totalDesktops}</span>
+                  <span className="text-blue-400" title="Assigned">A:{stats.assignedDesktops}</span>
+                  <span className="text-green-400" title="Free">F:{stats.freeDesktops}</span>
+                </div>
               </div>
-              <div className="glass-card px-4 py-2 text-center border-green-500/30 min-w-[80px]">
-                <span className="block text-xs text-gray-400">Free Sets</span>
-                <span className="text-xl font-bold text-green-400">{freeSets}</span>
+
+              {/* Laptop Stats */}
+              <div className="glass-card px-3 py-1.5 text-center border-yellow-500/30 min-w-[90px] flex flex-col justify-center">
+                <span className="text-[10px] text-yellow-400 font-bold uppercase tracking-wider mb-0.5">Laptop</span>
+                <div className="flex justify-center gap-2 text-xs font-mono">
+                  <span className="text-white" title="Total">T:{stats.totalLaptops}</span>
+                  <span className="text-blue-400" title="Assigned">A:{stats.assignedLaptops}</span>
+                  <span className="text-green-400" title="Free">F:{stats.freeLaptops}</span>
+                </div>
               </div>
+
+              {/* Monitor Stats */}
+              <div className="glass-card px-3 py-1.5 text-center border-purple-500/30 min-w-[90px] flex flex-col justify-center">
+                <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-0.5">Monitor</span>
+                <div className="flex justify-center gap-2 text-xs font-mono">
+                  <span className="text-white" title="Total">T:{stats.totalDisplays}</span>
+                  <span className="text-blue-400" title="Assigned">A:{stats.totalDisplays - stats.freeDisplays}</span>
+                  <span className="text-green-400" title="Free">F:{stats.freeDisplays}</span>
+                </div>
+              </div>
+
               {currentView === 'dashboard' && (
                 <button
                   onClick={() => setShowStats(!showStats)}
