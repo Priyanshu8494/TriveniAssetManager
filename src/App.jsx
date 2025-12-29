@@ -316,13 +316,13 @@ function App() {
                         {set.ids.dis1 && (
                           <div className="flex items-center gap-2 text-xs text-purple-300">
                             <span className="font-mono bg-purple-500/20 px-1 rounded">{set.ids.dis1}</span>
-                            <span>{set.display1?.brand} {set.display1?.size}</span>
+                            <span>{set.display1?.brand} {set.display1?.model} {set.display1?.size}</span>
                           </div>
                         )}
                         {set.ids.dis2 && (
                           <div className="flex items-center gap-2 text-xs text-pink-300">
                             <span className="font-mono bg-pink-500/20 px-1 rounded">{set.ids.dis2}</span>
-                            <span>{set.display2?.brand} {set.display2?.size}</span>
+                            <span>{set.display2?.brand} {set.display2?.model} {set.display2?.size}</span>
                           </div>
                         )}
                       </div>
@@ -775,8 +775,8 @@ function App() {
 
                           {/* IDs Grid */}
                           <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                            <IDBlock label="Mon 1" id={set.ids.dis1} val={`${set.display1?.brand || ''} ${set.display1?.size || ''}`} color="text-purple-400" />
-                            <IDBlock label="Mon 2" id={set.ids.dis2} val={`${set.display2?.brand || ''} ${set.display2?.size || ''}`} color="text-pink-400" />
+                            <IDBlock label="Mon 1" id={set.ids.dis1} val={`${set.display1?.brand || ''} ${set.display1?.model || ''} ${set.display1?.size || ''}`} color="text-purple-400" />
+                            <IDBlock label="Mon 2" id={set.ids.dis2} val={`${set.display2?.brand || ''} ${set.display2?.model || ''} ${set.display2?.size || ''}`} color="text-pink-400" />
 
                             <IDBlock label="Mouse" id={set.ids.mouse} val={set.peripherals.mouse} />
                             <IDBlock label="Keyboard" id={set.ids.key} val={set.peripherals.keyboard} />
