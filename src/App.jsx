@@ -12,7 +12,7 @@ function App() {
 
   const [editingId, setEditingId] = useState(null);
   const [showStats, setShowStats] = useState(false);
-  const [detailCategory, setDetailCategory] = useState(null); // null | 'Desktop' | 'Laptop' | 'Monitor'
+  const [currentCategory, setCurrentCategory] = useState(null); // Rename to avoid confusion with currentView
 
   // Firebase Read Listener
   useEffect(() => {
@@ -232,10 +232,11 @@ function App() {
 
   // Detail View Data Logic
   const detailData = useMemo(() => {
-    if (!detailCategory) return [];
+    const activeCategory = currentView === 'monitors' ? 'Monitor' : currentCategory;
+    if (!activeCategory) return [];
 
     let filtered = [];
-    switch (detailCategory) {
+    switch (activeCategory) {
       case 'Desktop': filtered = sets.filter(s => s.category !== 'Laptop'); break;
       case 'Laptop': filtered = sets.filter(s => s.category === 'Laptop'); break;
       case 'Monitor': filtered = sets.filter(s => s.display1?.brand || s.display2?.brand); break;
@@ -249,50 +250,52 @@ function App() {
       const rankB = statusOrder[b.status] || 99;
       return rankA - rankB;
     });
-  }, [sets, detailCategory]);
+  }, [sets, currentCategory, currentView]);
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
 
-      {/* Detail View Overlay */}
-      {detailCategory ? (
+      {/* Detail View Overlay (Dashboard Detail or Monitor Module) */}
+      {(currentCategory || currentView === 'monitors') ? (
         <div className="animation-fade-in">
-          <button
-            onClick={() => setDetailCategory(null)}
-            className="mb-6 flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-bold"
-          >
-            ⬅ Back to Dashboard
-          </button>
+          {currentView !== 'monitors' && (
+            <button
+              onClick={() => setCurrentCategory(null)}
+              className="mb-6 flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-bold"
+            >
+              ⬅ Back to Dashboard
+            </button>
+          )}
 
           <div className="flex justify-between items-center mb-6">
-            <h2 className={`text-3xl font-bold uppercase tracking-wider ${detailCategory === 'Desktop' ? 'text-cyan-400' :
-              detailCategory === 'Laptop' ? 'text-yellow-400' :
+            <h2 className={`text-3xl font-bold uppercase tracking-wider ${(currentCategory === 'Desktop') ? 'text-cyan-400' :
+              (currentCategory === 'Laptop') ? 'text-yellow-400' :
                 'text-purple-400'
               }`}>
-              {detailCategory} Overview
+              {(currentCategory || 'Monitor')} Overview
             </h2>
             <div className="flex gap-4">
               <div className="glass-card px-4 py-2 border-white/10 text-center">
                 <span className="block text-gray-400 text-[10px] uppercase">Total</span>
                 <span className="text-xl font-bold text-white">
-                  {detailCategory === 'Desktop' ? stats.totalDesktops :
-                    detailCategory === 'Laptop' ? stats.totalLaptops :
+                  {(currentCategory === 'Desktop') ? stats.totalDesktops :
+                    (currentCategory === 'Laptop') ? stats.totalLaptops :
                       stats.totalDisplays}
                 </span>
               </div>
               <div className="glass-card px-4 py-2 border-blue-500/30 text-center">
                 <span className="block text-gray-400 text-[10px] uppercase">Assigned</span>
                 <span className="text-xl font-bold text-blue-400">
-                  {detailCategory === 'Desktop' ? stats.assignedDesktops :
-                    detailCategory === 'Laptop' ? stats.assignedLaptops :
+                  {(currentCategory === 'Desktop') ? stats.assignedDesktops :
+                    (currentCategory === 'Laptop') ? stats.assignedLaptops :
                       (stats.totalDisplays - stats.freeDisplays)}
                 </span>
               </div>
               <div className="glass-card px-4 py-2 border-green-500/30 text-center">
                 <span className="block text-gray-400 text-[10px] uppercase">Free</span>
                 <span className="text-xl font-bold text-green-400">
-                  {detailCategory === 'Desktop' ? stats.freeDesktops :
-                    detailCategory === 'Laptop' ? stats.freeLaptops :
+                  {(currentCategory === 'Desktop') ? stats.freeDesktops :
+                    (currentCategory === 'Laptop') ? stats.freeLaptops :
                       stats.freeDisplays}
                 </span>
               </div>
@@ -308,7 +311,7 @@ function App() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">{set.setName}</h3>
-                    {detailCategory === 'Monitor' ? (
+                    {(currentCategory === 'Monitor' || currentView === 'monitors') ? (
                       <div className="flex flex-col gap-1 mt-1">
                         {set.ids.dis1 && (
                           <div className="flex items-center gap-2 text-xs text-purple-300">
@@ -374,15 +377,21 @@ function App() {
                 💻 Assets
               </button>
               <button
-                onClick={() => setCurrentView('spares')}
+                onClick={() => { setCurrentView('spares'); setCurrentCategory(null); }}
                 className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'spares' ? 'bg-purple-500 text-white border-purple-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
               >
                 🔌 Spares
               </button>
+              <button
+                onClick={() => { setCurrentView('monitors'); setCurrentCategory(null); }}
+                className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'monitors' ? 'bg-pink-500 text-white border-pink-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
+              >
+                🖥️ Displays
+              </button>
 
               {/* Desktop Stats */}
               <div
-                onClick={() => setDetailCategory('Desktop')}
+                onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Desktop'); }}
                 title="Click for Details"
                 className="glass-card px-3 py-1.5 text-center border-cyan-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-cyan-400 transition-all"
               >
@@ -396,7 +405,7 @@ function App() {
 
               {/* Laptop Stats */}
               <div
-                onClick={() => setDetailCategory('Laptop')}
+                onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Laptop'); }}
                 title="Click for Details"
                 className="glass-card px-3 py-1.5 text-center border-yellow-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-yellow-400 transition-all"
               >
@@ -410,7 +419,7 @@ function App() {
 
               {/* Monitor Stats */}
               <div
-                onClick={() => setDetailCategory('Monitor')}
+                onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Monitor'); }}
                 title="Click for Details"
                 className="glass-card px-3 py-1.5 text-center border-purple-500/30 min-w-[90px] flex flex-col justify-center cursor-pointer hover:bg-white/10 hover:border-purple-400 transition-all"
               >
@@ -449,7 +458,7 @@ function App() {
                     {/* Desktop Overview */}
                     <div
                       className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-cyan-500/30 group"
-                      onClick={() => setDetailCategory('Desktop')}
+                      onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Desktop'); }}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="text-cyan-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Desktop Overview</h4>
@@ -476,7 +485,7 @@ function App() {
                     {/* Laptop Overview */}
                     <div
                       className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-yellow-500/30 group"
-                      onClick={() => setDetailCategory('Laptop')}
+                      onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Laptop'); }}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Laptop Overview</h4>
@@ -503,7 +512,7 @@ function App() {
                     {/* Monitor Overview */}
                     <div
                       className="bg-black/20 p-4 rounded-lg cursor-pointer hover:bg-black/40 transition-all border border-transparent hover:border-purple-500/30 group"
-                      onClick={() => setDetailCategory('Monitor')}
+                      onClick={() => { setCurrentView('dashboard'); setCurrentCategory('Monitor'); }}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="text-purple-400 font-bold uppercase text-xs tracking-wider group-hover:underline">Monitor Overview</h4>
