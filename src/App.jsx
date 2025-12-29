@@ -308,7 +308,24 @@ function App() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">{set.setName}</h3>
-                    <p className="text-sm text-gray-400 font-mono">{set.ids.cpu}</p>
+                    {detailCategory === 'Monitor' ? (
+                      <div className="flex flex-col gap-1 mt-1">
+                        {set.ids.dis1 && (
+                          <div className="flex items-center gap-2 text-xs text-purple-300">
+                            <span className="font-mono bg-purple-500/20 px-1 rounded">{set.ids.dis1}</span>
+                            <span>{set.display1?.brand} {set.display1?.size}</span>
+                          </div>
+                        )}
+                        {set.ids.dis2 && (
+                          <div className="flex items-center gap-2 text-xs text-pink-300">
+                            <span className="font-mono bg-pink-500/20 px-1 rounded">{set.ids.dis2}</span>
+                            <span>{set.display2?.brand} {set.display2?.size}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-mono">{set.ids.cpu}</p>
+                    )}
                   </div>
                 </div>
 
