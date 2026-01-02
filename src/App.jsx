@@ -3,9 +3,15 @@ import * as XLSX from 'xlsx';
 import { db } from './firebaseConfig';
 import { ref, onValue, set, remove } from "firebase/database";
 import SpareItems from './SpareItems';
+import Login from './Login';
 
 function App() {
-  // State
+  // Authentication State
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
+
+  // Main UI State
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'spares'
   const [sets, setSets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +19,18 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null); // Rename to avoid confusion with currentView
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    localStorage.setItem('isLoggedIn', 'true');
+  };
+
+  const handleLogout = () => {
+    if (confirm("Are you sure you want to logout?")) {
+      setIsLoggedIn(false);
+      localStorage.removeItem('isLoggedIn');
+    }
+  };
 
   // Firebase Read Listener
   useEffect(() => {
@@ -252,6 +270,10 @@ function App() {
     });
   }, [sets, currentCategory, currentView]);
 
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto pb-20">
 
@@ -369,7 +391,17 @@ function App() {
               </h1>
               <p className="text-gray-400 mt-1">IT Asset Inventory System {loading && <span className="text-yellow-400 text-xs ml-2">(Connecting...)</span>}</p>
             </div>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center items-center gap-3">
+              <button
+                onClick={handleLogout}
+                className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 p-2 rounded-lg transition-all group"
+                title="Logout"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+              <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
               <button
                 onClick={() => setCurrentView('dashboard')}
                 className={`px-4 py-2 rounded-lg font-bold shadow-lg transition-all border ${currentView === 'dashboard' ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-black/30 text-gray-400 border-white/10'}`}
