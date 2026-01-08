@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebaseConfig';
 import { ref, onValue, set, push, remove } from "firebase/database";
+import * as XLSX from 'xlsx';
 
 function SpareItems() {
     const [items, setItems] = useState({});
@@ -119,6 +120,19 @@ function SpareItems() {
         }
     }
 
+    const handleExport = () => {
+        const data = Object.entries(items).map(([_, item]) => ({
+            "Category": item.category,
+            "Item Name": item.name,
+            "Quantity": item.qty
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Spare Inventory");
+        XLSX.writeFile(wb, "Triveni_Spare_Inventory_Report.xlsx");
+    };
+
     // Group items by category
     const groupedItems = categories.reduce((acc, cat) => {
         acc[cat] = Object.entries(items).filter(([k, v]) => v.category === cat);
@@ -165,12 +179,20 @@ function SpareItems() {
                     <span className="bg-purple-500/20 p-2 rounded-lg">🔌</span>
                     Spare Inventory Management
                 </h2>
-                <button
-                    onClick={resetToDefaults}
-                    className="text-[10px] text-gray-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-white/10 px-3 py-1 rounded"
-                >
-                    Reset to Default List
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleExport}
+                        className="bg-green-600/20 hover:bg-green-600/40 text-green-400 text-[10px] uppercase tracking-widest border border-green-500/30 px-3 py-1 rounded transition-all font-bold"
+                    >
+                        Export to Excel
+                    </button>
+                    <button
+                        onClick={resetToDefaults}
+                        className="text-[10px] text-gray-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-white/10 px-3 py-1 rounded"
+                    >
+                        Reset to Default List
+                    </button>
+                </div>
             </div>
 
             {/* New Item Form */}
