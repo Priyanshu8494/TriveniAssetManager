@@ -23,44 +23,44 @@ function SpareItems() {
 
     const defaultItems = [
         // Keyboard
-        { category: "Keyboard", name: "Logitech keyboard - K120", qty: 1 },
+        { category: "Keyboard", name: "Logitech keyboard- k120", qty: 1 },
         { category: "Keyboard", name: "Keyboard Dell - KB216", qty: 3 },
-        { category: "Keyboard", name: "Logitech KB - K200", qty: 2 },
-        { category: "Keyboard", name: "Logi KB - K200", qty: 2 },
-        { category: "Keyboard", name: "Dell KB212", qty: 1 },
+        { category: "Keyboard", name: "Logitech kb - 200", qty: 2 },
+        { category: "Keyboard", name: "Logi kb - k200", qty: 2 },
+        { category: "Keyboard", name: "Dell kb212", qty: 1 },
 
         // Mouse
-        { category: "Mouse", name: "Mouse Lenovo", qty: 1 },
-        { category: "Mouse", name: "DVR Mouse", qty: 1 },
-        { category: "Mouse", name: "Logitech Mouse", qty: 0 },
-        { category: "Mouse", name: "Dell Mouse", qty: 3 },
+        { category: "Mouse", name: "Mouse lenovo", qty: 1 },
+        { category: "Mouse", name: "Dvr mouse", qty: 1 },
+        { category: "Mouse", name: "Logitech mouse", qty: 0 },
+        { category: "Mouse", name: "Dell mouse", qty: 3 },
 
         // Laptop & Desktop
-        { category: "Laptop", name: "HP Laptop", qty: 5 },
-        { category: "Desktop", name: "HP Desktop", qty: 3 },
+        { category: "Laptop", name: "Hp laptop", qty: 5 },
+        { category: "Desktop", name: "Hp desktop", qty: 3 },
 
         // Cables
-        { category: "Cables", name: "Power Cable", qty: 7 },
-        { category: "Cables", name: "VGA Cable", qty: 11 },
-        { category: "Cables", name: "HDMI Cable", qty: 1 },
+        { category: "Cables", name: "Power cable", qty: 7 },
+        { category: "Cables", name: "11 - vga cable", qty: 11 },
+        { category: "Cables", name: "Hdmi cable", qty: 1 },
 
         // Adapters
-        { category: "Adapters", name: "Display Adapter", qty: 2 },
-        { category: "Adapters", name: "USB Display Adapter", qty: 3 },
-        { category: "Adapters", name: "HDMI to VGA", qty: 3 },
-        { category: "Adapters", name: "5AMP Adapter", qty: 2 },
+        { category: "Adapters", name: "Display adopter", qty: 2 },
+        { category: "Adapters", name: "Usb display adopter", qty: 3 },
+        { category: "Adapters", name: "Hdmi to vga", qty: 3 },
+        { category: "Adapters", name: "5apm adopter", qty: 2 },
 
         // Components
-        { category: "Components", name: "HDD (250GB/1TB/500GB)", qty: 0 },
-        { category: "Components", name: "PC RAM DDR4 8GB 2666", qty: 1 },
+        { category: "Components", name: "Hdd - 250, 1TB, 500GB", qty: 0 },
+        { category: "Components", name: "Pc ram ddr 4 8gb 2666", qty: 1 },
 
         // Printer
-        { category: "Printer", name: "Toner Cartridge", qty: 1 },
+        { category: "Printer", name: "Tonner cartage", qty: 1 },
 
         // Damage
-        { category: "Damage", name: "Damage HP - Headphone", qty: 10 },
-        { category: "Damage", name: "Damage SMPS", qty: 4 },
-        { category: "Damage", name: "Damage Mouse", qty: 5 },
+        { category: "Damage", name: "Damage hp - headphone", qty: 10 },
+        { category: "Damage", name: "Damage smps", qty: 4 },
+        { category: "Damage", name: "Damage mouse", qty: 5 },
     ];
 
     useEffect(() => {
