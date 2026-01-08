@@ -121,13 +121,51 @@ function SpareItems() {
     }
 
     const handleExport = () => {
-        const data = Object.entries(items).map(([_, item]) => ({
-            "Category": item.category,
-            "Item Name": item.name,
-            "Quantity": item.qty
-        }));
+        const itemsList = Object.values(items);
+        const working = itemsList.filter(i => i.category !== 'Damage');
+        const damaged = itemsList.filter(i => i.category === 'Damage');
 
-        const ws = XLSX.utils.json_to_sheet(data);
+        const maxRows = Math.max(working.length, damaged.length);
+        const aoa = [];
+
+        // Row 1: Custom Headers
+        const headerRow1 = Array(11).fill("");
+        headerRow1[1] = "Working condition";
+        headerRow1[9] = "Damage";
+        aoa.push(headerRow1);
+
+        // Row 2: Spacing
+        aoa.push(Array(11).fill(""));
+
+        // Row 3: Column Labels
+        const headerLabels = ["Category", "Item Name", "Quantity", "", "", "", "", "", "Category", "Item Name", "Quantity"];
+        aoa.push(headerLabels);
+
+        // Fill data in parallel columns
+        for (let i = 0; i < maxRows; i++) {
+            const row = Array(11).fill("");
+            if (working[i]) {
+                row[0] = working[i].category;
+                row[1] = working[i].name;
+                row[2] = working[i].qty;
+            }
+            if (damaged[i]) {
+                row[8] = damaged[i].category;
+                row[9] = damaged[i].name;
+                row[10] = damaged[i].qty;
+            }
+            aoa.push(row);
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Define Column Widths
+        ws['!cols'] = [
+            { wch: 12 }, { wch: 35 }, { wch: 10 }, // Working Side
+            { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, // Gap
+            { wch: 12 }, { wch: 35 }, { wch: 10 }  // Damage Side
+        ];
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Spare Inventory");
         XLSX.writeFile(wb, "Triveni_Spare_Inventory_Report.xlsx");
